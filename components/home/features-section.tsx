@@ -1,73 +1,57 @@
-"use client"
 
-import { Shield, Clock, Smartphone, Ticket, Award, Headphones } from "lucide-react"
-import { motion } from "framer-motion"
 
-const features = [
-  {
-    icon: Shield,
-    title: "Safe & Secure",
-    description: "Travel with confidence knowing your safety is our top priority",
-  },
-  {
-    icon: Clock,
-    title: "On-Time Departure",
-    description: "We value your time with punctual departures and arrivals",
-  },
-  {
-    icon: Smartphone,
-    title: "Easy Booking",
-    description: "Book your tickets online in just a few clicks",
-  },
-  {
-    icon: Ticket,
-    title: "Digital Tickets",
-    description: "Get your QR-coded ticket instantly via email and SMS",
-  },
-  {
-    icon: Award,
-    title: "Comfortable Seats",
-    description: "Enjoy spacious, reclining seats for a relaxing journey",
-  },
-  {
-    icon: Headphones,
-    title: "24/7 Support",
-    description: "Our customer service team is always here to help",
-  },
-]
+import { Bus, Users, MapPin } from 'lucide-react'
 
 export function FeaturesSection() {
-  return (
-    <section className="py-16 md:py-24">
-      <div className="container mx-auto px-4">
-        <div className="mb-12 text-center">
-          <h2 className="mb-4 text-balance text-3xl font-bold text-secondary md:text-4xl">
-            Why Choose Summit Coaches?
-          </h2>
-          <p className="text-pretty text-lg text-secondary-light">
-            Experience the best in bus travel with our premium services
-          </p>
-        </div>
+  const features = [
+    {
+      icon: Bus,
+      title: 'Modern Fleet',
+      description: 'Travel in our state-of-the-art coaches equipped with WiFi, power outlets, and reclining seats.'
+    },
+    {
+      icon: Users,
+      title: 'Expert Drivers',
+      description: 'Our drivers are professionally trained, experienced, and dedicated to your safety.'
+    },
+    {
+      icon: MapPin,
+      title: 'Scenic Routes',
+      description: 'We pick the most beautiful routes so the journey is just as memorable as the destination.'
+    }
+  ]
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+  return (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-slate-900">Why Choose Summit?</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary hover:shadow-lg"
+            <div 
+              key={index}
+              className="text-center p-6 rounded-2xl bg-slate-50 hover:bg-sky-50 transition-colors"
             >
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary">
-                <feature.icon className="h-7 w-7 text-primary transition-colors group-hover:text-white" />
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-primary">
+                <feature.icon className="h-8 w-8" />
               </div>
-              <h3 className="mb-2 text-xl font-semibold text-secondary">{feature.title}</h3>
-              <p className="text-pretty leading-relaxed text-secondary-light">{feature.description}</p>
-            </motion.div>
+              <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+              <p className="text-slate-500 leading-relaxed">{feature.description}</p>
+            </div>
           ))}
         </div>
       </div>
     </section>
   )
 }
+
+
+
+
+
+
+
+
+

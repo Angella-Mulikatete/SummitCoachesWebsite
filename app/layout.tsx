@@ -1,33 +1,12 @@
-import type React from "react"
+
 import type { Metadata } from "next"
-import { Inter, Poppins } from "next/font/google"
+import { Navbar } from "@/app/(layout)/navbar"
+import { Footer } from "@/app/(layout)/footer"
 import "./globals.css"
-import { Providers } from "@/components/providers"
-import { Toaster } from "@/components/ui/toaster"
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-})
-
-const poppins = Poppins({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-poppins",
-  display: "swap",
-})
 
 export const metadata: Metadata = {
-  title: "Summit Coaches - Book Your Journey Across Uganda",
-  description: "Reliable, comfortable bus travel across Uganda. Book your tickets online and travel with confidence.",
-  keywords: "bus booking, Uganda transport, Summit Coaches, travel Uganda, bus tickets",
-  openGraph: {
-    title: "Summit Coaches - Book Your Journey",
-    description: "Reliable bus travel across Uganda",
-    type: "website",
-  },
-    generator: 'v0.app'
+  title: "Summit Coaches - Premium Bus Travel",
+  description: "Connecting you to the world's most beautiful destinations with comfort and style.",
 }
 
 export default function RootLayout({
@@ -36,13 +15,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
-      <body className="min-h-screen">
-        <Providers>
+    <html lang="en">
+      <body className="flex flex-col min-h-screen font-sans bg-slate-50 text-slate-900">
+        <Navbar />
+        <main className="flex-grow">
           {children}
-          <Toaster />
-        </Providers>
+        </main>
+        <Footer />
       </body>
     </html>
   )
 }
+
+
+
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 "use client"
 
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { Navbar } from "@/app/(layout)/navbar"
+import { Footer } from "@/app/(layout)/footer"
 import useSWR from "swr"
 import { API_ENDPOINTS } from "@/lib/api"
 import type { DynamicContent } from "@/lib/types"
@@ -36,7 +36,7 @@ export default function AboutPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+      <Navbar />
       <main className="flex-1">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary-light/30 to-white py-16 md:py-24">

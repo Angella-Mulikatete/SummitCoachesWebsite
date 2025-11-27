@@ -3,8 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -89,7 +87,7 @@ export default function ContactPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+  
       <main className="flex-1">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary-light/30 to-white py-16 md:py-24">
@@ -224,7 +222,7 @@ export default function ContactPage() {
           </div>
         </section>
       </main>
-      <Footer />
+
     </div>
   )
 }
