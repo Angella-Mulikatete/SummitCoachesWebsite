@@ -1,8 +1,7 @@
 "use client"
 
 import { Suspense } from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+
 import { SearchForm } from "@/components/search/search-form"
 import { TripList } from "@/components/search/trip-list"
 import { SearchSkeleton } from "@/components/search/search-skeleton"
@@ -10,7 +9,7 @@ import { SearchSkeleton } from "@/components/search/search-skeleton"
 export default function SearchPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+ 
       <main className="flex-1 bg-muted/30 py-8">
         <div className="container mx-auto px-4">
           <div className="mb-8">
@@ -31,7 +30,7 @@ export default function SearchPage() {
           </div>
         </div>
       </main>
-      <Footer />
+   
     </div>
   )
 }
