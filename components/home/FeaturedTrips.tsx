@@ -6,10 +6,11 @@ import Link from 'next/link';
 import { useTrips } from '@/hooks/use-api';
 
 export default function FeaturedTrips() {
-  const { data: tripsData, isLoading, error } = useTrips({ perPage: 3 });
+  const { data: tripsData, isLoading, error } = useTrips();
 
   // Handle the paginated response structure
-  const trips = tripsData?.data?.data || [];
+  const trips = (tripsData?.data?.data || []).slice(0, 3);
+  console.log("trips", trips);
 
   if (isLoading) {
     return (

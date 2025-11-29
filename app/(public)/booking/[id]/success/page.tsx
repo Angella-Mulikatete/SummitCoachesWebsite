@@ -12,10 +12,7 @@ export default function BookingSuccessPage({ params }: { params: { id: string } 
 
   const booking = useMemo(() => {
     if (!bookingResponse) return null;
-    // Assuming the API returns the booking object directly or in a data property
-    // Based on other hooks, it seems to be response.data usually, but useBooking returns response.data directly in the hook
-    // Let's check useBooking hook implementation again.
-    // It returns response.data.
+
     const data = bookingResponse;
     return {
       id: data.id,
