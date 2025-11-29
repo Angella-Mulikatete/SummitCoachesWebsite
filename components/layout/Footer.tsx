@@ -66,7 +66,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start space-x-2">
                 <Phone className="h-5 w-5 text-[#0ea5e9] mt-0.5" />
-                <span className="text-gray-400 text-sm">+1 (555) 123-4567</span>
+                <span className="text-gray-400 text-sm">+256 700 000 000</span>
               </li>
               <li className="flex items-start space-x-2">
                 <Mail className="h-5 w-5 text-[#0ea5e9] mt-0.5" />
@@ -74,7 +74,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start space-x-2">
                 <MapPin className="h-5 w-5 text-[#0ea5e9] mt-0.5" />
-                <span className="text-gray-400 text-sm">123 Travel Street, City, State 12345</span>
+                <span className="text-gray-400 text-sm">Kampala, Uganda</span>
               </li>
             </ul>
           </motion.div>
