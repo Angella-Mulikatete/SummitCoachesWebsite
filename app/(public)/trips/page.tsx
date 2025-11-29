@@ -36,31 +36,67 @@ export default function TripsPage() {
   });
 
   // Extract trips from response with better error handling
+  // const trips = useMemo(() => {
+  //   if (!tripsResponse) return [];
+
+  //   // Handle different response structures
+  //   if (tripsResponse.data?.trips) {
+  //     return tripsResponse.data.trips.map((trip: any) => ({
+  //       id: trip.id,
+  //       title: `${trip.route?.origin || trip.origin || 'Unknown'} to ${trip.route?.destination || trip.destination || 'Unknown'}`,
+  //       description: `Journey from ${trip.route?.origin || trip.origin || 'Unknown'} to ${trip.route?.destination || trip.destination || 'Unknown'}`,
+  //       price: parseFloat(trip.fare || '0'),
+  //       image: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
+  //       destination: trip.route?.destination || trip.destination || 'Unknown',
+  //       duration: 'N/A',
+  //       departureDate: trip.trip_date,
+  //       departureTime: trip.departure_time,
+  //       availableSeats: trip.available_seats || 0,
+  //       busType: trip.bus_type || 'Standard',
+  //       amenities: ['WiFi', 'AC', 'USB Charging'],
+  //       rating: 4.8,
+  //       reviews: 124
+  //     }));
+  //   }
+
+  //   return [];
+  // }, [tripsResponse]);
+
   const trips = useMemo(() => {
-    if (!tripsResponse) return [];
+    if (!tripsResponse?.data?.trips) return [];
 
-    // Handle different response structures
-    if (tripsResponse.data?.trips) {
-      return tripsResponse.data.trips.map((trip: any) => ({
-        id: trip.id,
-        title: `${trip.route?.origin || trip.origin || 'Unknown'} to ${trip.route?.destination || trip.destination || 'Unknown'}`,
-        description: `Journey from ${trip.route?.origin || trip.origin || 'Unknown'} to ${trip.route?.destination || trip.destination || 'Unknown'}`,
-        price: parseFloat(trip.fare || '0'),
-        image: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
-        destination: trip.route?.destination || trip.destination || 'Unknown',
-        duration: 'N/A',
-        departureDate: trip.trip_date,
-        departureTime: trip.departure_time,
-        availableSeats: trip.available_seats || 0,
-        busType: trip.bus_type || 'Standard',
-        amenities: ['WiFi', 'AC', 'USB Charging'],
-        rating: 4.8,
-        reviews: 124
-      }));
-    }
+    // Get today's date at midnight for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    return [];
+    return tripsResponse.data.trips
+        .filter((trip: any) => {
+            // Only include trips scheduled for today or future dates
+            const tripDate = new Date(trip.trip_date);
+            return tripDate >= today;
+        })
+        .map((trip: any) => ({
+            id: trip.id,
+            title: `${trip.route?.origin || 'Unknown'} to ${trip.route?.destination || 'Unknown'}`,
+            description: `Journey from ${trip.route?.origin || ''} to ${trip.route?.destination || ''}`,
+            price: parseFloat(trip.fare || '0'),
+            image: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
+            destination: trip.route?.destination || 'Unknown',
+            duration: trip.route?.duration_minutes 
+                ? `${Math.floor(trip.route.duration_minutes / 60)}h ${trip.route.duration_minutes % 60}m` 
+                : 'N/A',
+            departureDate: trip.trip_date,
+            departureTime: trip.departure_time,
+            availableSeats: trip.available_seats || 0,
+            busType: trip.bus?.bus_type?.name || 'Standard',
+            amenities: ['WiFi', 'AC', 'USB Charging'],
+            rating: 4.8,
+            reviews: 124
+        }));
   }, [tripsResponse]);
+
+console.log("trips",trips);
+
 
   const filteredAndSortedTrips = useMemo(() => {
     let result = [...trips];
