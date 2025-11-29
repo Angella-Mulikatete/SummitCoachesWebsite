@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import type { Trip, CreateBookingData } from '@/lib/api';
 import { bookingFormSchema, type BookingFormData } from '@/lib/booking-schema';
 import BookingConfirmDialog from './BookingConfirmDialog';
 import { toast } from 'sonner';
@@ -27,9 +26,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+export interface BookingTrip {
+  id: number;
+  price: number;
+  availableSeats: number;
+  destination: string;
+  duration: string;
+  departureDate: string;
+}
+
 interface BookingFormProps {
-  trip: Trip;
-  onSubmit: (data: CreateBookingData) => Promise<void>;
+  trip: BookingTrip;
+  onSubmit: (data: any) => Promise<void>;
 }
 
 export default function BookingForm({ trip, onSubmit }: BookingFormProps) {

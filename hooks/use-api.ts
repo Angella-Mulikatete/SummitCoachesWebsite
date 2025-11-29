@@ -137,6 +137,7 @@ export function useAccountById(id: number) {
 
 /**
  * Hook to get all trips with optional filters
+ * Public endpoint - no authentication required
  */
 export function useTrips(filters?: {
     routeId?: number;
@@ -206,6 +207,7 @@ export function useTripSeats(id: number) {
 
 /**
  * Hook to get all routes
+ * Public endpoint - no authentication required
  */
 export function useRoutes(filters?: {
     companyId?: number;
@@ -365,10 +367,13 @@ export function useVerifyTicket(ticketNumber: string) {
     });
 }
 
+
+
 // ==================== PARCELS ====================
 
 /**
  * Hook to track a parcel
+ * Public endpoint - no authentication required
  */
 export function useTrackParcel(trackingCode: string) {
     return useQuery({

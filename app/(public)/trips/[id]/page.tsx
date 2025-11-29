@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { tripApi, type Trip } from '@/lib/api';
+import { useTrip, useTripAvailability } from '@/hooks/use-api';
 import {
   Calendar,
   MapPin,
@@ -12,31 +12,58 @@ import {
   Loader2,
   ArrowLeft,
   ArrowRight,
+  Bus,
+  Armchair,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export default function TripDetailPage({ params }: { params: { id: string } }) {
-  const [trip, setTrip] = useState<Trip | null>(null);
-  const [loading, setLoading] = useState(true);
+  const id = parseInt(params.id);
+  const { data: tripResponse, isLoading: isTripLoading, error: tripError } = useTrip(id);
+  const { data: availabilityResponse, isLoading: isAvailabilityLoading } = useTripAvailability(id);
 
-  useEffect(() => {
-    loadTrip();
-  }, [params.id]);
+  const trip = useMemo(() => {
+    if (!tripResponse?.data) return null;
+    const data = tripResponse.data;
+    return {
+      id: data.id,
+      title: data.title || data.route?.name || `Trip to ${data.destination || data.route?.destination}`,
+      description: data.description || `Journey from ${data.origin || data.route?.origin} to ${data.destination || data.route?.destination}`,
+      price: parseFloat(data.fare || data.price || '0'),
+      imageUrl: data.image_url || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
+      destination: data.destination || data.route?.destination || 'Unknown',
+      duration: data.duration || data.route?.duration_minutes ? `${Math.floor(data.route.duration_minutes / 60)}h ${data.route.duration_minutes % 60}m` : 'N/A',
+      departureDate: data.trip_date,
+      availableSeats: data.available_seats || 0,
+      highlights: data.highlights || ['Comfortable Seating', 'Free WiFi', 'USB Charging Ports'],
+      included: data.included || ['Luggage Allowance', 'Travel Insurance', 'Refreshments'],
+      bus: data.bus ? {
+        name: data.bus.name || 'Standard Bus',
+        plateNumber: data.bus.plate_number || 'N/A',
+        capacity: data.bus.capacity || 0,
+        type: data.bus.bus_type?.name || 'Standard',
+      } : null,
+    };
+  }, [tripResponse]);
 
-  const loadTrip = async () => {
-    try {
-      const data = await tripApi.getTripById(params.id);
-      setTrip(data);
-    } catch (error) {
-      console.error('Failed to load trip:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const availability = useMemo(() => {
+    if (!availabilityResponse?.data) return null;
+    const data = availabilityResponse.data;
+    // Assuming the structure based on typical availability endpoints
+    return {
+      totalSeats: data.total_seats || 0,
+      takenSeats: data.taken_seats || [], // Array of seat numbers
+      takenCount: data.taken_count || data.taken_seats?.length || 0,
+      remainingCount: data.available_count || data.available_seats || 0,
+    };
+  }, [availabilityResponse]);
 
-  if (loading) {
+  const isLoading = isTripLoading || isAvailabilityLoading;
+  const error = tripError;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-12 w-12 text-[#0ea5e9] animate-spin" />
@@ -44,7 +71,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
     );
   }
 
-  if (!trip) {
+  if (error || !trip) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -129,6 +156,70 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
               </div>
             </div>
 
+            {/* Bus Details Section */}
+            {trip.bus && (
+              <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
+                <h2 className="text-2xl font-bold text-[#1e293b] mb-4 flex items-center">
+                  <Bus className="h-6 w-6 mr-2 text-[#0ea5e9]" />
+                  Bus Details
+                </h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-[#475569] block">Bus Name</span>
+                    <span className="font-semibold text-[#1e293b]">{trip.bus.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-[#475569] block">Plate Number</span>
+                    <span className="font-semibold text-[#1e293b]">{trip.bus.plateNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-[#475569] block">Type</span>
+                    <span className="font-semibold text-[#1e293b]">{trip.bus.type}</span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-[#475569] block">Capacity</span>
+                    <span className="font-semibold text-[#1e293b]">{trip.bus.capacity} seats</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Seat Availability Section */}
+            {availability && (
+              <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
+                <h2 className="text-2xl font-bold text-[#1e293b] mb-4 flex items-center">
+                  <Armchair className="h-6 w-6 mr-2 text-[#0ea5e9]" />
+                  Seat Availability
+                </h2>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-[#475569] block">Total</span>
+                    <span className="text-xl font-bold text-[#1e293b]">{availability.totalSeats}</span>
+                  </div>
+                  <div className="text-center p-3 bg-red-50 rounded-lg">
+                    <span className="text-sm text-[#475569] block">Taken</span>
+                    <span className="text-xl font-bold text-red-600">{availability.takenCount}</span>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <span className="text-sm text-[#475569] block">Remaining</span>
+                    <span className="text-xl font-bold text-green-600">{availability.remainingCount}</span>
+                  </div>
+                </div>
+                {availability.takenSeats.length > 0 && (
+                  <div>
+                    <span className="text-sm text-[#475569] block mb-2">Taken Seat Numbers:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {availability.takenSeats.map((seat: string | number, idx: number) => (
+                        <Badge key={idx} variant="secondary" className="bg-gray-200 text-gray-700">
+                          {seat}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
               <h2 className="text-2xl font-bold text-[#1e293b] mb-4">Description</h2>
               <p className="text-[#475569] leading-relaxed">{trip.description}</p>
@@ -138,7 +229,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
               <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
                 <h2 className="text-2xl font-bold text-[#1e293b] mb-4">Highlights</h2>
                 <ul className="space-y-2">
-                  {trip.highlights.map((highlight, index) => (
+                  {trip.highlights.map((highlight: string, index: number) => (
                     <li key={index} className="flex items-start">
                       <CheckCircle className="h-5 w-5 text-[#10b981] mr-2 mt-0.5 flex-shrink-0" />
                       <span className="text-[#475569]">{highlight}</span>
@@ -154,7 +245,7 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
                   What&apos;s Included
                 </h2>
                 <ul className="space-y-2">
-                  {trip.included.map((item, index) => (
+                  {trip.included.map((item: string, index: number) => (
                     <li key={index} className="flex items-start">
                       <CheckCircle className="h-5 w-5 text-[#0ea5e9] mr-2 mt-0.5 flex-shrink-0" />
                       <span className="text-[#475569]">{item}</span>

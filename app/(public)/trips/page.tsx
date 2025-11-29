@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import TripCard from '@/components/trips/TripCard';
-import { tripApi, type Trip } from '@/lib/api';
+import { useTrips } from '@/hooks/use-api';
 import { Search, Loader2, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,25 +19,32 @@ import { Skeleton } from '@/components/ui/skeleton';
 type SortOption = 'default' | 'price-low' | 'price-high' | 'date-soon' | 'date-later';
 
 export default function TripsPage() {
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('default');
 
-  useEffect(() => {
-    loadTrips();
-  }, []);
+  // Use React Query hook
+  const { data: tripsResponse, isLoading, error } = useTrips();
 
-  const loadTrips = async () => {
-    try {
-      const data = await tripApi.getTrips();
-      setTrips(data);
-    } catch (error) {
-      console.error('Failed to load trips:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Extract trips from response
+  const trips = useMemo(() => {
+    if (!tripsResponse?.data?.data) return [];
+    return tripsResponse.data.data.map((trip: any) => ({
+      id: trip.id,
+      title: trip.title || trip.route?.name || `Trip to ${trip.destination || trip.route?.destination}`,
+      description: trip.description || `Journey from ${trip.origin || trip.route?.origin} to ${trip.destination || trip.route?.destination}`,
+      price: parseFloat(trip.fare || trip.price || '0'),
+      image: trip.image_url || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
+      destination: trip.destination || trip.route?.destination || 'Unknown',
+      duration: trip.duration || trip.route?.duration_minutes ? `${Math.floor(trip.route.duration_minutes / 60)}h ${trip.route.duration_minutes % 60}m` : 'N/A',
+      departureDate: trip.trip_date,
+      departureTime: trip.departure_time,
+      availableSeats: trip.available_seats,
+      busType: trip.bus?.type || 'Standard',
+      amenities: trip.amenities || ['WiFi', 'AC', 'USB Charging'],
+      rating: 4.8, // Mock rating as it's not in API yet
+      reviews: 124 // Mock reviews
+    }));
+  }, [tripsResponse]);
 
   const filteredAndSortedTrips = useMemo(() => {
     let result = [...trips];
@@ -142,7 +149,7 @@ export default function TripsPage() {
           </div>
         </motion.div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-4">
@@ -152,6 +159,10 @@ export default function TripsPage() {
                 <Skeleton className="h-4 w-full" />
               </div>
             ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <p className="text-xl text-red-500">Failed to load trips. Please try again later.</p>
           </div>
         ) : filteredAndSortedTrips.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -1,43 +1,35 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Users, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-
-const sampleTrips = [
-  {
-    id: '1',
-    title: 'Coastal Paradise Escape',
-    destination: 'California Coast',
-    duration: '5 Days',
-    price: 899,
-    imageUrl: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
-    availableSeats: 12,
-    departureDate: '2024-06-15',
-  },
-  {
-    id: '2',
-    title: 'Mountain Adventure',
-    destination: 'Rocky Mountains',
-    duration: '7 Days',
-    price: 1299,
-    imageUrl: 'https://images.pexels.com/photos/1054218/pexels-photo-1054218.jpeg?auto=compress&cs=tinysrgb&w=800',
-    availableSeats: 8,
-    departureDate: '2024-07-01',
-  },
-  {
-    id: '3',
-    title: 'Historic Cities Tour',
-    destination: 'East Coast',
-    duration: '6 Days',
-    price: 1099,
-    imageUrl: 'https://images.pexels.com/photos/466685/pexels-photo-466685.jpeg?auto=compress&cs=tinysrgb&w=800',
-    availableSeats: 15,
-    departureDate: '2024-06-22',
-  },
-];
+import { useTrips } from '@/hooks/use-api';
 
 export default function FeaturedTrips() {
+  const { data: tripsData, isLoading, error } = useTrips({ perPage: 3 });
+
+  // Handle the paginated response structure
+  const trips = tripsData?.data?.data || [];
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <Loader2 className="h-12 w-12 text-[#0ea5e9] animate-spin mx-auto" />
+          <p className="mt-4 text-slate-500">Loading featured trips...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return null; // Hide section on error
+  }
+
+  if (trips.length === 0) {
+    return null; // Hide section if no trips
+  }
+
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,7 +48,7 @@ export default function FeaturedTrips() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {sampleTrips.map((trip, index) => (
+          {trips.map((trip: any, index: number) => (
             <motion.div
               key={trip.id}
               initial={{ opacity: 0, y: 50 }}
@@ -66,34 +58,46 @@ export default function FeaturedTrips() {
               whileHover={{ y: -10 }}
               className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
             >
-              <div className="relative h-64 overflow-hidden">
-                <img
-                  src={trip.imageUrl}
-                  alt={trip.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
+              <div className="relative h-64 overflow-hidden bg-slate-100">
+                {trip.image_url ? (
+                  <img
+                    src={trip.image_url}
+                    alt={trip.title || trip.route?.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-200">
+                    <span className="text-slate-400 text-4xl">🚌</span>
+                  </div>
+                )}
                 <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full">
-                  <span className="text-[#0ea5e9] font-bold">${trip.price}</span>
+                  <span className="text-[#0ea5e9] font-bold">
+                    ${trip.fare || trip.price || 0}
+                  </span>
                 </div>
               </div>
 
               <div className="p-6">
-                <h3 className="text-2xl font-bold text-[#1e293b] mb-2 group-hover:text-[#0ea5e9] transition-colors">
-                  {trip.title}
+                <h3 className="text-2xl font-bold text-[#1e293b] mb-2 group-hover:text-[#0ea5e9] transition-colors line-clamp-1">
+                  {trip.title || trip.route?.name || 'Bus Trip'}
                 </h3>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-[#475569]">
                     <MapPin className="h-4 w-4 mr-2 text-[#0ea5e9]" />
-                    <span className="text-sm">{trip.destination}</span>
+                    <span className="text-sm line-clamp-1">
+                      {trip.origin || trip.route?.origin} → {trip.destination || trip.route?.destination}
+                    </span>
                   </div>
                   <div className="flex items-center text-[#475569]">
                     <Calendar className="h-4 w-4 mr-2 text-[#0ea5e9]" />
-                    <span className="text-sm">{trip.duration}</span>
+                    <span className="text-sm">
+                      {trip.trip_date} • {trip.departure_time}
+                    </span>
                   </div>
                   <div className="flex items-center text-[#475569]">
                     <Users className="h-4 w-4 mr-2 text-[#0ea5e9]" />
-                    <span className="text-sm">{trip.availableSeats} seats available</span>
+                    <span className="text-sm">{trip.available_seats} seats available</span>
                   </div>
                 </div>
 
