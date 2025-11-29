@@ -1,24 +1,8 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { Calendar as CalendarIcon, MapPin, Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { useRoutes } from '@/hooks/use-api';
+import { useState } from 'react';
+import { Calendar, MapPin, Search, X } from 'lucide-react';
 
 interface RouteSearchProps {
     onSearch: (filters: {
@@ -34,106 +18,149 @@ export default function RouteSearch({ onSearch, className }: RouteSearchProps) {
     const [destination, setDestination] = useState<string>('');
     const [date, setDate] = useState<Date>();
 
-    const { data: routes } = useRoutes({ active: true });
+    // You'll need to fetch routes to populate dropdowns
+    // This should fetch from /routes endpoint without filters
+    const [routes, setRoutes] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch all routes on mount to populate dropdowns
+    useState(() => {
+        fetch('https://summit.mellonhardware.com/api/v1/routes', {
+            headers: {
+                'accept': 'application/json',
+                'Authorization': 'Bearer YOUR_TOKEN_HERE'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            setRoutes(data.data || []);
+            setIsLoading(false);
+        })
+        .catch(err => {
+            console.error('Failed to fetch routes:', err);
+            setIsLoading(false);
+        });
+    });
 
     // Extract unique origins and destinations
-    const origins = Array.from(new Set(routes?.map((r) => r.origin).filter(Boolean))).sort();
-    const destinations = Array.from(new Set(routes?.map((r) => r.destination).filter(Boolean))).sort();
+    const origins = Array.from(
+        new Set(routes.map((r) => r.origin).filter(Boolean))
+    ).sort();
+    
+    const destinations = Array.from(
+        new Set(routes.map((r) => r.destination).filter(Boolean))
+    ).sort();
 
     const handleSearch = () => {
         onSearch({
-            origin: origin === 'all' ? undefined : origin,
-            destination: destination === 'all' ? undefined : destination,
-            date,
+            origin: origin && origin !== 'all' ? origin : undefined,
+            destination: destination && destination !== 'all' ? destination : undefined,
+            date: date,
+        });
+    };
+
+    const handleClear = () => {
+        setOrigin('');
+        setDestination('');
+        setDate(undefined);
+        onSearch({});
+    };
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
         });
     };
 
     return (
-        <div className={cn("bg-white p-4 rounded-lg shadow-lg border border-gray-100", className)}>
+        <div className={`bg-white p-6 rounded-lg shadow-lg border border-gray-100 ${className}`}>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Origin Select */}
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-primary" />
+                        <MapPin className="w-4 h-4 text-blue-600" />
                         From
                     </label>
-                    <Select value={origin} onValueChange={setOrigin}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Origin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Any Location</SelectItem>
-                            {origins.map((loc) => (
-                                <SelectItem key={loc} value={loc as string}>
-                                    {loc}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <select 
+                        value={origin} 
+                        onChange={(e) => setOrigin(e.target.value)}
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Select Origin</option>
+                        <option value="all">Any Location</option>
+                        {origins.map((loc) => (
+                            <option key={loc} value={loc}>
+                                {loc}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 {/* Destination Select */}
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-primary" />
+                        <MapPin className="w-4 h-4 text-blue-600" />
                         To
                     </label>
-                    <Select value={destination} onValueChange={setDestination}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Destination" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Any Location</SelectItem>
-                            {destinations.map((loc) => (
-                                <SelectItem key={loc} value={loc as string}>
-                                    {loc}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <select 
+                        value={destination} 
+                        onChange={(e) => setDestination(e.target.value)}
+                        disabled={isLoading}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Select Destination</option>
+                        <option value="all">Any Location</option>
+                        {destinations.map((loc) => (
+                            <option key={loc} value={loc}>
+                                {loc}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 {/* Date Picker */}
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4 text-primary" />
+                        <Calendar className="w-4 h-4 text-blue-600" />
                         Date
                     </label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !date && "text-muted-foreground"
-                                )}
-                            >
-                                {date ? format(date, "PPP") : <span>Pick a date</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={setDate}
-                                initialFocus
-                                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                            />
-                        </PopoverContent>
-                    </Popover>
+                    <input
+                        type="date"
+                        value={date ? date.toISOString().split('T')[0] : ''}
+                        onChange={(e) => setDate(e.target.value ? new Date(e.target.value) : undefined)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                 </div>
 
-                {/* Search Button */}
-                <div className="flex items-end">
-                    <Button
-                        className="w-full bg-primary hover:bg-primary/90 text-white"
+                {/* Search & Clear Buttons */}
+                <div className="flex items-end gap-2">
+                    <button
                         onClick={handleSearch}
+                        disabled={isLoading}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                        <Search className="w-4 h-4 mr-2" />
-                        Search Trips
-                    </Button>
+                        <Search className="w-4 h-4" />
+                        Search
+                    </button>
+                    {(origin || destination || date) && (
+                        <button
+                            onClick={handleClear}
+                            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
     );
 }
+
+
+
+

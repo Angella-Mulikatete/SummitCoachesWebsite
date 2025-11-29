@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import TripCard from '@/components/trips/TripCard';
 import RouteSearch from '@/components/trips/RouteSearch';
-import { useTrips } from '@/hooks/use-api';
+import { useTripsViaRoutes } from '@/hooks/use-api';
 import { Loader2, SlidersHorizontal, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,8 +28,8 @@ export default function TripsPage() {
   }>({});
   const [sortBy, setSortBy] = useState<SortOption>('default');
 
-  // Use React Query hook with error handling
-  const { data: tripsResponse, isLoading, error, isError } = useTrips({
+  // Use route-based search hook
+  const { data: tripsResponse, isLoading, error, isError } = useTripsViaRoutes({
     origin: searchFilters.origin,
     destination: searchFilters.destination,
     tripDate: searchFilters.date ? format(searchFilters.date, 'yyyy-MM-dd') : undefined,
@@ -43,36 +43,16 @@ export default function TripsPage() {
     if (tripsResponse.data?.trips) {
       return tripsResponse.data.trips.map((trip: any) => ({
         id: trip.id,
-        title: trip.route?.name || `${trip.route?.origin} to ${trip.route?.destination}`,
-        description: `Journey from ${trip.route?.origin || 'Unknown'} to ${trip.route?.destination || 'Unknown'}`,
-        price: parseFloat(trip.fare_summary?.base_amount || '0'),
+        title: `${trip.route?.origin || trip.origin || 'Unknown'} to ${trip.route?.destination || trip.destination || 'Unknown'}`,
+        description: `Journey from ${trip.route?.origin || trip.origin || 'Unknown'} to ${trip.route?.destination || trip.destination || 'Unknown'}`,
+        price: parseFloat(trip.fare || '0'),
         image: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
-        destination: trip.route?.destination || 'Unknown',
-        duration: trip.route?.distance_km ? `~${Math.round(trip.route.distance_km / 60)} hours` : 'N/A',
+        destination: trip.route?.destination || trip.destination || 'Unknown',
+        duration: 'N/A',
         departureDate: trip.trip_date,
-        departureTime: trip.formatted_departure || trip.departure_time_12h || trip.departure_time,
-        availableSeats: trip.remaining_seats || 0,
-        busType: trip.bus_summary?.type || trip.bus?.busType?.name || 'Standard',
-        amenities: ['WiFi', 'AC', 'USB Charging'],
-        rating: 4.8,
-        reviews: 124
-      }));
-    }
-
-    // If response is an array
-    if (Array.isArray(tripsResponse.data)) {
-      return tripsResponse.data.map((trip: any) => ({
-        id: trip.id,
-        title: trip.route?.name || `${trip.route?.origin} to ${trip.route?.destination}`,
-        description: `Journey from ${trip.route?.origin || 'Unknown'} to ${trip.route?.destination || 'Unknown'}`,
-        price: parseFloat(trip.fare_summary?.base_amount || '0'),
-        image: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
-        destination: trip.route?.destination || 'Unknown',
-        duration: trip.route?.distance_km ? `~${Math.round(trip.route.distance_km / 60)} hours` : 'N/A',
-        departureDate: trip.trip_date,
-        departureTime: trip.formatted_departure || trip.departure_time_12h || trip.departure_time,
-        availableSeats: trip.remaining_seats || 0,
-        busType: trip.bus_summary?.type || trip.bus?.busType?.name || 'Standard',
+        departureTime: trip.departure_time,
+        availableSeats: trip.available_seats || 0,
+        busType: trip.bus_type || 'Standard',
         amenities: ['WiFi', 'AC', 'USB Charging'],
         rating: 4.8,
         reviews: 124

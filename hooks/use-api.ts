@@ -157,7 +157,7 @@
 //                     filters?.destination,
 //                     filters?.perPage
 //                 );
-                
+
 //                 console.log('Trips API Response:', response);
 //                 return response;
 //             } catch (error) {
@@ -616,9 +616,54 @@ export function useTripSeats(id: number) {
 
 // ==================== ROUTES ====================
 
+// /**
+//  * Hook to get all routes
+//  * Public endpoint - no authentication required
+//  */
+// export function useRoutes(filters?: {
+//     companyId?: number;
+//     active?: boolean;
+//     search?: string;
+//     dateFilter?: string;
+//     hasTrips?: boolean;
+//     minSeats?: number;
+// }) {
+//     return useQuery({
+//         queryKey: ['routes', filters],
+//         queryFn: async () => {
+//             const response = await RoutesService.getAllRoutes(
+//                 filters?.companyId,
+//                 filters?.active,
+//                 filters?.search,
+//                 filters?.dateFilter,
+//                 filters?.hasTrips,
+//                 filters?.minSeats
+//             );
+//             return response.data as Route[];
+//         },
+//     });
+// }
+
+// /**
+//  * Hook to get a single route by ID
+//  */
+// export function useRoute(id: number) {
+//     return useQuery({
+//         queryKey: ['route', id],
+//         queryFn: async () => {
+//             const response = await RoutesService.getRouteById(id);
+//             return response.data;
+//         },
+//         enabled: !!id,
+//     });
+// }
+
+
+// hooks/use-api.ts
+
 /**
- * Hook to get all routes
- * Public endpoint - no authentication required
+ * Hook to get routes with filters
+ * Uses /routes endpoint with active, date_filter, has_trips parameters
  */
 export function useRoutes(filters?: {
     companyId?: number;
@@ -631,32 +676,68 @@ export function useRoutes(filters?: {
     return useQuery({
         queryKey: ['routes', filters],
         queryFn: async () => {
-            const response = await RoutesService.getAllRoutes(
-                filters?.companyId,
-                filters?.active,
-                filters?.search,
-                filters?.dateFilter,
-                filters?.hasTrips,
-                filters?.minSeats
+            const params = new URLSearchParams();
+
+            if (filters?.companyId) params.append('company_id', filters.companyId.toString());
+            if (filters?.active !== undefined) params.append('active', filters.active.toString());
+            if (filters?.search) params.append('search', filters.search);
+            if (filters?.dateFilter) params.append('date_filter', filters.dateFilter);
+            if (filters?.hasTrips !== undefined) params.append('has_trips', filters.hasTrips.toString());
+            if (filters?.minSeats) params.append('min_seats', filters.minSeats.toString());
+
+            const response = await fetch(
+                `https://summit.mellonhardware.com/api/v1/routes?${params.toString()}`,
+                {
+                    headers: {
+                        'accept': 'application/json',
+                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`
+                    }
+                }
             );
-            return response.data as Route[];
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch routes');
+            }
+
+            const data = await response.json();
+            return data.data as Route[];
         },
     });
 }
 
 /**
- * Hook to get a single route by ID
+ * Hook to get trips for a specific route
+ * Uses /routes/{id}/trips endpoint
  */
-export function useRoute(id: number) {
+export function useRouteTrips(routeId: number, date?: string) {
     return useQuery({
-        queryKey: ['route', id],
+        queryKey: ['route-trips', routeId, date],
         queryFn: async () => {
-            const response = await RoutesService.getRouteById(id);
-            return response.data;
+            const params = new URLSearchParams();
+            if (date) params.append('date', date);
+
+            const response = await fetch(
+                `https://summit.mellonhardware.com/api/v1/routes/${routeId}/trips?${params.toString()}`,
+                {
+                    headers: {
+                        'accept': 'application/json',
+                        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN}`
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch route trips');
+            }
+
+            const data = await response.json();
+            return data.data;
         },
-        enabled: !!id,
+        enabled: !!routeId,
     });
 }
+
+
 
 /**
  * Hook to get popular routes
@@ -796,3 +877,87 @@ export function useTrackParcel(trackingCode: string) {
         enabled: !!trackingCode,
     });
 }
+
+/**
+ * Hook to get trips via route-based search
+ * Searches routes by origin/destination, then fetches trips for matching routes
+ * Public endpoint - no authentication required
+ */
+export function useTripsViaRoutes(filters?: {
+    origin?: string;
+    destination?: string;
+    tripDate?: string;
+}) {
+    return useQuery({
+        queryKey: ['trips-via-routes', filters],
+        queryFn: async () => {
+            try {
+                // If no filters, fetch trips directly
+                if (!filters?.origin && !filters?.destination) {
+                    const response = await TripsService.ed65B907Bc4Ee55E575689B029B07(
+                        undefined,
+                        filters?.tripDate,
+                        undefined,
+                        undefined,
+                        undefined
+                    );
+                    return response;
+                }
+
+                // Build search query for routes
+                const searchQuery = filters.origin && filters.destination
+                    ? `${filters.origin} ${filters.destination}`
+                    : filters.origin || filters.destination || '';
+
+                // First, find routes matching the origin/destination
+                const routesResponse = await RoutesService.getAllRoutes(
+                    undefined,
+                    undefined, // active (defaults to true in backend)
+                    searchQuery,
+                    filters.tripDate,
+                    true, // has_trips
+                    undefined
+                );
+
+                // If no routes found, return empty result
+                if (!routesResponse.data || routesResponse.data.length === 0) {
+                    return {
+                        data: {
+                            trips: []
+                        }
+                    };
+                }
+
+                // Fetch trips for each matching route
+                const allTripsPromises = routesResponse.data.map(async (route: any) => {
+                    try {
+                        const tripsResponse = await RoutesService.getRouteTrips(
+                            route.id,
+                            filters.tripDate
+                        );
+                        return tripsResponse.data?.trips || [];
+                    } catch (error) {
+                        console.error(`Failed to fetch trips for route ${route.id}:`, error);
+                        return [];
+                    }
+                });
+
+                const allTripsArrays = await Promise.all(allTripsPromises);
+                const allTrips = allTripsArrays.flat();
+
+                // Return in the same format as regular trips endpoint
+                return {
+                    data: {
+                        trips: allTrips
+                    }
+                };
+            } catch (error) {
+                console.error('Trips via routes error:', error);
+                throw error;
+            }
+        },
+        retry: 1,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+}
+
