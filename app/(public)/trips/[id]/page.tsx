@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { tripApi, bookingApi, type Trip, type CreateBookingData } from '@/lib/api';
-import BookingForm from '@/components/booking/BookingForm';
+import { tripApi, type Trip } from '@/lib/api';
 import {
   Calendar,
   MapPin,
@@ -13,11 +11,13 @@ import {
   CheckCircle,
   Loader2,
   ArrowLeft,
+  ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function TripDetailPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,16 +33,6 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
       console.error('Failed to load trip:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleBooking = async (data: CreateBookingData) => {
-    try {
-      const booking = await bookingApi.createBooking(data);
-      router.push(`/booking/${booking.id}/success`);
-    } catch (error) {
-      console.error('Booking failed:', error);
-      alert('Booking failed. Please try again.');
     }
   };
 
@@ -66,6 +56,9 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
       </div>
     );
   }
+
+  const isLowAvailability = trip.availableSeats <= 5;
+  const isSoldOut = trip.availableSeats === 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e0f2fe] via-white to-[#e0f2fe] py-12">
@@ -91,6 +84,20 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
               <div className="absolute top-4 right-4 bg-white px-4 py-2 rounded-full shadow-lg">
                 <span className="text-[#0ea5e9] font-bold text-xl">${trip.price}</span>
               </div>
+              {isLowAvailability && !isSoldOut && (
+                <div className="absolute top-4 left-4">
+                  <Badge variant="destructive" className="font-semibold">
+                    Only {trip.availableSeats} seats left!
+                  </Badge>
+                </div>
+              )}
+              {isSoldOut && (
+                <div className="absolute top-4 left-4">
+                  <Badge variant="destructive" className="font-semibold">
+                    Sold Out
+                  </Badge>
+                </div>
+              )}
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold text-[#1e293b] mb-4">
@@ -163,7 +170,55 @@ export default function TripDetailPage({ params }: { params: { id: string } }) {
             animate={{ opacity: 1, x: 0 }}
             className="lg:sticky lg:top-24 lg:self-start"
           >
-            <BookingForm trip={trip} onSubmit={handleBooking} />
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <h3 className="text-2xl font-bold text-[#1e293b] mb-6">Ready to Book?</h3>
+
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between items-center py-3 border-b">
+                  <span className="text-[#475569]">Price per person</span>
+                  <span className="text-2xl font-bold text-[#0ea5e9]">${trip.price}</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b">
+                  <span className="text-[#475569]">Available seats</span>
+                  <span className="font-semibold text-[#1e293b]">{trip.availableSeats}</span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b">
+                  <span className="text-[#475569]">Departure date</span>
+                  <span className="font-semibold text-[#1e293b]">
+                    {new Date(trip.departureDate).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              <Link href={`/booking/${trip.id}`} className="block">
+                <Button
+                  className="w-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white py-6 text-lg"
+                  disabled={isSoldOut}
+                >
+                  {isSoldOut ? (
+                    'Sold Out'
+                  ) : (
+                    <>
+                      <span>Book This Trip</span>
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+              </Link>
+
+              {isLowAvailability && !isSoldOut && (
+                <p className="text-sm text-red-600 text-center mt-4 font-medium">
+                  ⚠️ Only {trip.availableSeats} seats remaining!
+                </p>
+              )}
+
+              <p className="text-xs text-[#475569] text-center mt-4">
+                Secure your spot today. Free cancellation up to 48 hours before departure.
+              </p>
+            </div>
           </motion.div>
         </div>
       </div>
