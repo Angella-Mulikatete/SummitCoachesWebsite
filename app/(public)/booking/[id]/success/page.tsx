@@ -1,31 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { bookingApi, type Booking } from '@/lib/api';
+import { useBooking } from '@/hooks/use-api';
 import { CheckCircle, Calendar, MapPin, Users, Mail, Phone, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function BookingSuccessPage({ params }: { params: { id: string } }) {
-  const [booking, setBooking] = useState<Booking | null>(null);
-  const [loading, setLoading] = useState(true);
+  const id = parseInt(params.id);
+  const { data: bookingResponse, isLoading, error } = useBooking(id);
 
-  useEffect(() => {
-    loadBooking();
-  }, [params.id]);
+  const booking = useMemo(() => {
+    if (!bookingResponse) return null;
 
-  const loadBooking = async () => {
-    try {
-      const data = await bookingApi.getBookingById(params.id);
-      setBooking(data);
-    } catch (error) {
-      console.error('Failed to load booking:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const data = bookingResponse;
+    return {
+      id: data.id,
+      customerName: data.walkin_passenger_name || data.passenger?.user?.name || 'Customer',
+      customerEmail: data.walkin_passenger_email || data.passenger?.user?.email || 'N/A',
+      customerPhone: data.walkin_passenger_phone || data.passenger?.user?.phone || 'N/A',
+      numberOfPassengers: data.tickets?.length || 1,
+      bookingDate: data.created_at || new Date().toISOString(),
+      totalPrice: data.total_amount || 0,
+      // Add other fields if needed
+    };
+  }, [bookingResponse]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-12 w-12 text-[#0ea5e9] animate-spin" />
@@ -33,7 +34,7 @@ export default function BookingSuccessPage({ params }: { params: { id: string } 
     );
   }
 
-  if (!booking) {
+  if (error || !booking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

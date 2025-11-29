@@ -10,15 +10,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { Trip } from '@/lib/api';
 import type { BookingFormData } from '@/lib/booking-schema';
+import type { BookingTrip } from './BookingForm';
 import { Calendar, MapPin, Users, DollarSign } from 'lucide-react';
 
 interface BookingConfirmDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onConfirm: () => void;
-    trip: Trip;
+    trip: BookingTrip;
     formData: BookingFormData;
     isLoading?: boolean;
 }

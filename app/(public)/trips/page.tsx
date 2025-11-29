@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { format } from 'date-fns';
 import TripCard from '@/components/trips/TripCard';
-import { tripApi, type Trip } from '@/lib/api';
-import { Search, Loader2, SlidersHorizontal } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import RouteSearch from '@/components/trips/RouteSearch';
+import { useTripsViaRoutes } from '@/hooks/use-api';
+import { Loader2, SlidersHorizontal, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,42 +16,90 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type SortOption = 'default' | 'price-low' | 'price-high' | 'date-soon' | 'date-later';
 
 export default function TripsPage() {
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchFilters, setSearchFilters] = useState<{
+    origin?: string;
+    destination?: string;
+    date?: Date;
+  }>({});
   const [sortBy, setSortBy] = useState<SortOption>('default');
 
-  useEffect(() => {
-    loadTrips();
-  }, []);
+  // Use route-based search hook
+  const { data: tripsResponse, isLoading, error, isError } = useTripsViaRoutes({
+    origin: searchFilters.origin,
+    destination: searchFilters.destination,
+    tripDate: searchFilters.date ? format(searchFilters.date, 'yyyy-MM-dd') : undefined,
+  });
 
-  const loadTrips = async () => {
-    try {
-      const data = await tripApi.getTrips();
-      setTrips(data);
-    } catch (error) {
-      console.error('Failed to load trips:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Extract trips from response with better error handling
+  // const trips = useMemo(() => {
+  //   if (!tripsResponse) return [];
+
+  //   // Handle different response structures
+  //   if (tripsResponse.data?.trips) {
+  //     return tripsResponse.data.trips.map((trip: any) => ({
+  //       id: trip.id,
+  //       title: `${trip.route?.origin || trip.origin || 'Unknown'} to ${trip.route?.destination || trip.destination || 'Unknown'}`,
+  //       description: `Journey from ${trip.route?.origin || trip.origin || 'Unknown'} to ${trip.route?.destination || trip.destination || 'Unknown'}`,
+  //       price: parseFloat(trip.fare || '0'),
+  //       image: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
+  //       destination: trip.route?.destination || trip.destination || 'Unknown',
+  //       duration: 'N/A',
+  //       departureDate: trip.trip_date,
+  //       departureTime: trip.departure_time,
+  //       availableSeats: trip.available_seats || 0,
+  //       busType: trip.bus_type || 'Standard',
+  //       amenities: ['WiFi', 'AC', 'USB Charging'],
+  //       rating: 4.8,
+  //       reviews: 124
+  //     }));
+  //   }
+
+  //   return [];
+  // }, [tripsResponse]);
+
+  const trips = useMemo(() => {
+    if (!tripsResponse?.data?.trips) return [];
+
+    // Get today's date at midnight for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return tripsResponse.data.trips
+        .filter((trip: any) => {
+            // Only include trips scheduled for today or future dates
+            const tripDate = new Date(trip.trip_date);
+            return tripDate >= today;
+        })
+        .map((trip: any) => ({
+            id: trip.id,
+            title: `${trip.route?.origin || 'Unknown'} to ${trip.route?.destination || 'Unknown'}`,
+            description: `Journey from ${trip.route?.origin || ''} to ${trip.route?.destination || ''}`,
+            price: parseFloat(trip.fare || '0'),
+            image: 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg?auto=compress&cs=tinysrgb&w=800',
+            destination: trip.route?.destination || 'Unknown',
+            duration: trip.route?.duration_minutes 
+                ? `${Math.floor(trip.route.duration_minutes / 60)}h ${trip.route.duration_minutes % 60}m` 
+                : 'N/A',
+            departureDate: trip.trip_date,
+            departureTime: trip.departure_time,
+            availableSeats: trip.available_seats || 0,
+            busType: trip.bus?.bus_type?.name || 'Standard',
+            amenities: ['WiFi', 'AC', 'USB Charging'],
+            rating: 4.8,
+            reviews: 124
+        }));
+  }, [tripsResponse]);
+
+console.log("trips",trips);
+
 
   const filteredAndSortedTrips = useMemo(() => {
     let result = [...trips];
-
-    // Filter by search term
-    if (searchTerm) {
-      result = result.filter(
-        (trip) =>
-          trip.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          trip.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          trip.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
 
     // Sort trips
     switch (sortBy) {
@@ -67,12 +116,11 @@ export default function TripsPage() {
         result.sort((a, b) => new Date(b.departureDate).getTime() - new Date(a.departureDate).getTime());
         break;
       default:
-        // Keep default order
         break;
     }
 
     return result;
-  }, [trips, searchTerm, sortBy]);
+  }, [trips, sortBy]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e0f2fe] via-white to-[#e0f2fe]">
@@ -97,21 +145,32 @@ export default function TripsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 space-y-4"
         >
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search trips by title, destination, or description..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12"
-              />
+          {/* Route Search Component */}
+          <RouteSearch
+            onSearch={setSearchFilters}
+            className="mb-8"
+          />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-muted-foreground">
+                Found {filteredAndSortedTrips.length} {filteredAndSortedTrips.length === 1 ? 'trip' : 'trips'}
+              </p>
+              {(searchFilters.origin || searchFilters.destination || searchFilters.date) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchFilters({})}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  Clear filters
+                </Button>
+              )}
             </div>
 
             <div className="flex gap-2">
               <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                <SelectTrigger className="w-[200px] h-12">
+                <SelectTrigger className="w-[200px] h-12 bg-white">
                   <SlidersHorizontal className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -125,24 +184,24 @@ export default function TripsPage() {
               </Select>
             </div>
           </div>
-
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Found {filteredAndSortedTrips.length} {filteredAndSortedTrips.length === 1 ? 'trip' : 'trips'}
-            </p>
-            {searchTerm && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearchTerm('')}
-              >
-                Clear search
-              </Button>
-            )}
-          </div>
         </motion.div>
 
-        {loading ? (
+        {/* Error State */}
+        {isError && (
+          <Alert variant="destructive" className="mb-8">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load trips. Please try again later.
+              {error instanceof Error && (
+                <p className="mt-2 text-sm">{error.message}</p>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-4">
@@ -166,7 +225,9 @@ export default function TripsPage() {
             className="text-center py-20"
           >
             <p className="text-xl text-[#475569]">
-              {searchTerm ? 'No trips found matching your search.' : 'No trips available at the moment.'}
+              {(searchFilters.origin || searchFilters.destination || searchFilters.date)
+                ? 'No trips found matching your search criteria.'
+                : 'No trips available at the moment.'}
             </p>
           </motion.div>
         )}

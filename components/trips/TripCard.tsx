@@ -3,13 +3,24 @@
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import type { Trip } from '@/lib/api';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+export interface TripCardData {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  destination: string;
+  duration: string;
+  departureDate: string;
+  availableSeats: number;
+}
+
 interface TripCardProps {
-  trip: Trip;
+  trip: TripCardData;
   index: number;
 }
 

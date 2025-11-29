@@ -5,9 +5,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import type { Trip, CreateBookingData } from '@/lib/api';
 import { bookingFormSchema, type BookingFormData } from '@/lib/booking-schema';
 import BookingConfirmDialog from './BookingConfirmDialog';
+import LoginDialog from '@/components/auth/LoginDialog';
+import { authStorage } from '@/lib/auth';
 import { toast } from 'sonner';
 import {
   Form,
@@ -27,14 +28,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+export interface BookingTrip {
+  id: number;
+  price: number;
+  availableSeats: number;
+  destination: string;
+  duration: string;
+  departureDate: string;
+}
+
 interface BookingFormProps {
-  trip: Trip;
-  onSubmit: (data: CreateBookingData) => Promise<void>;
+  trip: BookingTrip;
+  onSubmit: (data: any) => Promise<void>;
 }
 
 export default function BookingForm({ trip, onSubmit }: BookingFormProps) {
   const [loading, setLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
@@ -50,6 +61,20 @@ export default function BookingForm({ trip, onSubmit }: BookingFormProps) {
   const totalPrice = trip.price * numberOfPassengers;
 
   const handleFormSubmit = (data: BookingFormData) => {
+    // Check if user is authenticated
+    if (!authStorage.isAuthenticated()) {
+      setShowLoginDialog(true);
+      toast.info('Please login to continue', {
+        description: 'You need to be logged in to complete your booking.',
+      });
+      return;
+    }
+
+    setShowConfirmDialog(true);
+  };
+
+  const handleLoginSuccess = () => {
+    // After successful login, show the confirmation dialog
     setShowConfirmDialog(true);
   };
 
@@ -204,6 +229,12 @@ export default function BookingForm({ trip, onSubmit }: BookingFormProps) {
         trip={trip}
         formData={form.getValues()}
         isLoading={loading}
+      />
+
+      <LoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+        onSuccess={handleLoginSuccess}
       />
     </>
   );

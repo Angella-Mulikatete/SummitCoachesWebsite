@@ -2,7 +2,11 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Summit Coaches API",
-        "description": "Authentication and user management endpoints for Summit Coaches system",
+        "description": "API documentation for Summit Coaches Bus Management System",
+        "contact": {
+            "name": "Summit Coaches Support Team",
+            "email": "support@summitcoaches.com"
+        },
         "version": "1.0.0"
     },
     "servers": [
@@ -720,15 +724,237 @@
                 }
             }
         },
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register as a passenger (Public - Website/Mobile)",
+                "description": "Public self-registration for customers. Creates a User account with 'Passenger' role and a corresponding Passenger record. Account requires email verification before login. This is NOT for walk-in passengers - those are created by booking clerks at the counter.",
+                "operationId": "registerPassenger",
+                "requestBody": {
+                    "description": "Passenger registration details",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "phone"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Full name of the passenger",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "description": "Email address (must be unique)",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "password": {
+                                        "description": "Password (minimum 8 characters)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "Password123!"
+                                    },
+                                    "password_confirmation": {
+                                        "description": "Password confirmation (must match password)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "Password123!"
+                                    },
+                                    "phone": {
+                                        "description": "Phone number (formats accepted: 0700123456, +256700123456, 256700123456)",
+                                        "type": "string",
+                                        "example": "0700123456"
+                                    },
+                                    "gender": {
+                                        "description": "Gender (optional)",
+                                        "type": "string",
+                                        "enum": [
+                                            "male",
+                                            "female",
+                                            "other"
+                                        ],
+                                        "example": "male",
+                                        "nullable": true
+                                    },
+                                    "address": {
+                                        "description": "Physical address (optional)",
+                                        "type": "string",
+                                        "maxLength": 500,
+                                        "example": "Plot 45, Kampala Road",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registration successful - verification email sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registration successful"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "john.doe@example.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "+256700123456"
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "active"
+                                                        },
+                                                        "role_id": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "profile_photo": {
+                                                            "type": "string",
+                                                            "example": "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                                                        },
+                                                        "created_at": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Account created successfully! Please check your email to verify your account."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The email has already been taken."
+                                                    }
+                                                },
+                                                "phone": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The phone has already been taken."
+                                                    }
+                                                },
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Password confirmation does not match."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error - Registration failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to register"
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "exception": {
+                                                    "type": "string",
+                                                    "example": "Database connection error"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register-staff": {
             "post": {
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Register as staff member (For Testing)",
-                "description": "Self-registration for Booking Clerks, Conductors, Cashiers, Inspectors, Receptionists, and Drivers. Account requires admin approval.",
-                "operationId": "7b0d9de5185e5cc811554ad1ee4e06e6",
+                "summary": "Register as staff member (For Testing/Development)",
+                "description": "Self-registration for Booking Clerks, Conductors, Cashiers, Inspectors, Receptionists, and Drivers. Account is created with 'pending' status and requires admin approval before the user can login. Not available for Admin or Super Admin roles.",
+                "operationId": "registerStaff",
                 "requestBody": {
+                    "description": "Staff registration details",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -744,31 +970,42 @@
                                 ],
                                 "properties": {
                                     "name": {
+                                        "description": "Full name",
                                         "type": "string",
+                                        "maxLength": 255,
                                         "example": "Jane Smith"
                                     },
                                     "email": {
+                                        "description": "Email address (must be unique)",
                                         "type": "string",
+                                        "format": "email",
                                         "example": "jane@summitcoaches.com"
                                     },
                                     "password": {
+                                        "description": "Password (minimum 8 characters)",
                                         "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
                                         "example": "Password123!"
                                     },
                                     "password_confirmation": {
+                                        "description": "Password confirmation",
                                         "type": "string",
+                                        "format": "password",
                                         "example": "Password123!"
                                     },
                                     "phone": {
+                                        "description": "Phone number",
                                         "type": "string",
                                         "example": "0700000002"
                                     },
                                     "role_id": {
-                                        "description": "Role ID (3=Booking Clerk, 4=Conductor, 5=Cashier, 6=Inspector, 7=Receptionist, 8=Driver)",
+                                        "description": "Role ID - Allowed roles: 3=Booking Clerk, 4=Conductor, 5=Cashier, 6=Inspector, 7=Receptionist, 8=Driver",
                                         "type": "integer",
                                         "example": 3
                                     },
                                     "gender": {
+                                        "description": "Gender",
                                         "type": "string",
                                         "enum": [
                                             "male",
@@ -778,11 +1015,14 @@
                                         "example": "female"
                                     },
                                     "address": {
+                                        "description": "Physical address (optional)",
                                         "type": "string",
+                                        "maxLength": 500,
                                         "example": "Plot 12, Kampala",
                                         "nullable": true
                                     },
                                     "id_type": {
+                                        "description": "ID document type (optional)",
                                         "type": "string",
                                         "enum": [
                                             "NIN",
@@ -793,11 +1033,13 @@
                                         "nullable": true
                                     },
                                     "id_number": {
+                                        "description": "ID number (optional, required if id_type is provided)",
                                         "type": "string",
                                         "example": "CM12345678901234",
                                         "nullable": true
                                     },
                                     "company_id": {
+                                        "description": "Company ID (optional)",
                                         "type": "integer",
                                         "example": 1,
                                         "nullable": true
@@ -810,49 +1052,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Staff account created - pending approval"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                }
-            }
-        },
-        "/auth/test-verification-link": {
-            "post": {
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Generate a test email verification link",
-                "description": "Generates a hash-based verification link for testing email verification.",
-                "operationId": "9bf6492bcd2691dce8f8cef2e1e0af3f",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "user_id",
-                                    "email"
-                                ],
-                                "properties": {
-                                    "user_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "example": "test@example.com"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Verification link generated successfully",
+                        "description": "Staff account created - pending approval",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -861,9 +1061,133 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "verification_link": {
+                                        "message": {
                                             "type": "string",
-                                            "example": "https://api.example.com/auth/verify-email/1/5d41402abc4b2a76b9719d911017c592"
+                                            "example": "Registration successful"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Jane Smith"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "jane@summitcoaches.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "+256700000002"
+                                                        },
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "pending"
+                                                        },
+                                                        "role": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 3
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "Booking Clerk"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Staff account created. Please verify your email and wait for admin approval."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/auth/verify-email/{id}/{hash}": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify email address via verification link",
+                "description": "Verifies user's email address using the verification link sent to their email. The hash must match sha1 of the user's email address.",
+                "operationId": "verifyEmail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "hash",
+                        "in": "path",
+                        "description": "SHA1 hash of user's email",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "5d41402abc4b2a76b9719d911017c592"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email verified successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email verified successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid verification link or already verified",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid verification link"
                                         }
                                     },
                                     "type": "object"
@@ -890,9 +1214,62 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/auth/resend-verification": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Resend verification email",
+                "description": "Resends the email verification link to the user's email address. Only works if email is not already verified.",
+                "operationId": "resendVerificationEmail",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "description": "Email address to resend verification to",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Verification email resent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Verification email resent successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
-                    "400": {
-                        "description": "Invalid request",
+                    "404": {
+                        "description": "User not found",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -903,7 +1280,27 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Invalid email"
+                                            "example": "No user found with this email address."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Email already verified",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This email is already verified."
                                         }
                                     },
                                     "type": "object"
@@ -914,34 +1311,61 @@
                 }
             }
         },
-        "/admin/staff/{id}/approve": {
+        "/auth/test-verification-link": {
             "post": {
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Approve a staff account",
-                "description": "Only Super Admins and Admins can approve staff accounts",
-                "operationId": "f9b376d9602d7a0837ac183e38c0d1ea",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the staff account to approve",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Generate test verification link (Development Only)",
+                "description": "Generates a hash-based verification link for testing email verification without sending actual emails. Use this link with the verify-email endpoint.",
+                "operationId": "generateTestVerificationLink",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "test@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Staff account approved successfully"
-                    },
-                    "403": {
-                        "description": "Unauthorized"
+                        "description": "Verification link generated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "verification_link": {
+                                            "type": "string",
+                                            "example": "https://api.example.com/auth/verify-email/1/5d41402abc4b2a76b9719d911017c592"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Staff not found"
+                        "description": "User not found"
                     }
                 }
             }
@@ -952,7 +1376,8 @@
                     "Authentication"
                 ],
                 "summary": "Login user",
-                "operationId": "99d66635c4992aeaa6aa44ff653d0563",
+                "description": "Authenticates user with email and password. Returns user details and Sanctum token. Supports 2FA if enabled. Email must be verified before login (unless requires_email_verification is false).",
+                "operationId": "login",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -964,17 +1389,22 @@
                                 ],
                                 "properties": {
                                     "email": {
+                                        "description": "User's email address",
                                         "type": "string",
+                                        "format": "email",
                                         "example": "superadmin@summitcoaches.com"
                                     },
                                     "password": {
+                                        "description": "User's password",
                                         "type": "string",
+                                        "format": "password",
                                         "example": "#Summit@2025"
                                     },
                                     "code": {
-                                        "description": "2FA code if enabled",
+                                        "description": "2FA code (required only if 2FA is enabled for this user)",
                                         "type": "string",
-                                        "example": "123456"
+                                        "example": "123456",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -984,16 +1414,159 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login successful"
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login successful"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "role": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abcdefghijklmnopqrstuvwxyz"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Incorrect password"
+                        "description": "Incorrect password",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Incorrect password."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The entered password is incorrect."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Invalid email address"
+                        "description": "Invalid email address",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid email address."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The provided email does not exist in our records."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Email not verified or 2FA required"
+                        "description": "Email not verified, account inactive, or 2FA required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Please verify your email before logging in."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Email address not verified."
+                                                    }
+                                                },
+                                                "verification_required": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1003,13 +1576,52 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Logout current user (invalidate token)",
-                "operationId": "6abf3b64a4bc7838d56346f05a5153af",
+                "summary": "Logout current user",
+                "description": "Invalidates the current user's authentication token. User must be authenticated to logout.",
+                "operationId": "logout",
                 "responses": {
                     "200": {
-                        "description": "Logged out successfully"
+                        "description": "Logged out successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logged out successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/auth/profile": {
@@ -1018,412 +1630,152 @@
                     "User Account"
                 ],
                 "summary": "Get authenticated user profile",
-                "operationId": "bd0250ee34235b4fc170a8f1e28f4bd5",
+                "description": "Returns the complete profile of the currently authenticated user including role, company, and creator information.",
+                "operationId": "getProfile",
                 "responses": {
                     "200": {
-                        "description": "Profile retrieved successfully"
-                    }
-                }
-            }
-        },
-        "/auth/verify-email/{id}/{hash}": {
-            "get": {
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Verify email via verification link",
-                "operationId": "6b697947dc6ac5c217a243914905654c",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "hash",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Email verified successfully"
-                    },
-                    "400": {
-                        "description": "Invalid verification link or already verified"
-                    }
-                }
-            }
-        },
-        "/auth/resend-verification": {
-            "post": {
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Resend verification email to user",
-                "operationId": "a54cb277848c94d61ba6729ba556af94",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "email"
-                                ],
-                                "properties": {
-                                    "email": {
-                                        "type": "string",
-                                        "example": "john@example.com"
-                                    }
-                                },
-                                "type": "object"
+                        "description": "Profile retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+256700123456"
+                                                },
+                                                "email_verified_at": {
+                                                    "type": "string",
+                                                    "example": "13 Nov 2025, 05:30 PM"
+                                                },
+                                                "profile_photo": {
+                                                    "type": "string"
+                                                },
+                                                "gender": {
+                                                    "type": "string"
+                                                },
+                                                "address": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                },
+                                                "role": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "company": {
+                                                    "properties": {
+                                                        "company_id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
                 },
-                "responses": {
-                    "200": {
-                        "description": "Verification email resent successfully"
-                    },
-                    "404": {
-                        "description": "User not found"
-                    },
-                    "400": {
-                        "description": "Email already verified"
+                "security": [
+                    {
+                        "sanctum": []
                     }
-                }
+                ]
             }
         },
         "/auth/profile/update": {
-            "put": {
-                "tags": [
-                    "User Account"
-                ],
-                "summary": "Update authenticated user profile (PUT)",
-                "description": "Update the profile information of the currently authenticated user. Only the provided fields will be updated. Email, role, status, and password cannot be changed through this endpoint. Supports partial updates - send only the fields you want to change.",
-                "operationId": "updateProfilePut",
-                "requestBody": {
-                    "description": "Profile data to update. All fields are optional - only send fields you want to update.",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "name": {
-                                        "description": "Full name of the user",
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "John Doe"
-                                    },
-                                    "phone": {
-                                        "description": "Phone number (accepts: 0700123456, +256700123456, or 256700123456)",
-                                        "type": "string",
-                                        "pattern": "^\\+256\\d{9}$",
-                                        "example": "0700123456"
-                                    },
-                                    "gender": {
-                                        "description": "Gender (must be exactly: male, female, or other - lowercase)",
-                                        "type": "string",
-                                        "enum": [
-                                            "male",
-                                            "female",
-                                            "other"
-                                        ],
-                                        "example": "male"
-                                    },
-                                    "address": {
-                                        "description": "Physical address (optional)",
-                                        "type": "string",
-                                        "maxLength": 500,
-                                        "example": "Plot 45, Kampala Road, Kampala",
-                                        "nullable": true
-                                    },
-                                    "id_type": {
-                                        "description": "Type of identification document (optional)",
-                                        "type": "string",
-                                        "enum": [
-                                            "NIN",
-                                            "Passport",
-                                            "DriverLicense"
-                                        ],
-                                        "example": "NIN",
-                                        "nullable": true
-                                    },
-                                    "id_number": {
-                                        "description": "Identification number (optional, will be converted to uppercase)",
-                                        "type": "string",
-                                        "maxLength": 50,
-                                        "example": "CM12345678901234",
-                                        "nullable": true
-                                    },
-                                    "profile_photo": {
-                                        "description": "Profile photo URL (optional, must be a valid URL)",
-                                        "type": "string",
-                                        "format": "url",
-                                        "maxLength": 500,
-                                        "example": "https://example.com/photos/john.jpg",
-                                        "nullable": true
-                                    },
-                                    "emergency_contact": {
-                                        "description": "Emergency contact phone number (optional)",
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "0700987654",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Profile updated successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Profile updated successfully."
-                                        },
-                                        "data": {
-                                            "description": "Updated user profile data",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Doe"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "john@summitcoaches.com"
-                                                },
-                                                "phone": {
-                                                    "type": "string",
-                                                    "example": "+256700123456"
-                                                },
-                                                "gender": {
-                                                    "type": "string",
-                                                    "example": "male"
-                                                },
-                                                "address": {
-                                                    "type": "string",
-                                                    "example": "Plot 45, Kampala Road, Kampala"
-                                                },
-                                                "id_type": {
-                                                    "type": "string",
-                                                    "example": "NIN"
-                                                },
-                                                "id_number": {
-                                                    "type": "string",
-                                                    "example": "CM12345678901234"
-                                                },
-                                                "profile_photo": {
-                                                    "type": "string",
-                                                    "example": "https://example.com/photos/john.jpg"
-                                                },
-                                                "emergency_contact": {
-                                                    "type": "string",
-                                                    "example": "0700987654"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "13-11-2025 05:30 PM"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error - Invalid input data or duplicate phone/ID number",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Validation failed"
-                                        },
-                                        "errors": {
-                                            "description": "Validation errors by field",
-                                            "properties": {
-                                                "gender": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The gender must be one of: male, female, or other."
-                                                    }
-                                                },
-                                                "phone": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The phone number is already in use by another user."
-                                                    }
-                                                },
-                                                "id_number": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The ID number is already in use by another user."
-                                                    }
-                                                },
-                                                "profile_photo": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The profile photo must be a valid URL."
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated - No valid token provided",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error - Failed to update profile",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to update profile. Please try again later."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             "post": {
                 "tags": [
                     "User Account"
                 ],
-                "summary": "Update authenticated user profile (POST)",
-                "description": "Update the profile information of the currently authenticated user. Only the provided fields will be updated. Email, role, status, and password cannot be changed through this endpoint. Supports partial updates - send only the fields you want to change.",
-                "operationId": "updateProfilePost",
+                "summary": "Update authenticated user profile",
+                "description": "Update profile information. Supports partial updates - only send fields you want to change.",
+                "operationId": "updateProfile",
                 "requestBody": {
-                    "description": "Profile data to update. All fields are optional - only send fields you want to update.",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "properties": {
                                     "name": {
-                                        "description": "Full name of the user",
                                         "type": "string",
-                                        "maxLength": 255,
-                                        "example": "John Doe"
+                                        "maxLength": 255
                                     },
                                     "phone": {
-                                        "description": "Phone number (accepts: 0700123456, +256700123456, or 256700123456)",
-                                        "type": "string",
-                                        "pattern": "^\\+256\\d{9}$",
-                                        "example": "0700123456"
+                                        "type": "string"
                                     },
                                     "gender": {
-                                        "description": "Gender (must be exactly: male, female, or other - lowercase)",
                                         "type": "string",
                                         "enum": [
                                             "male",
                                             "female",
                                             "other"
-                                        ],
-                                        "example": "male"
+                                        ]
                                     },
                                     "address": {
-                                        "description": "Physical address (optional)",
                                         "type": "string",
-                                        "maxLength": 500,
-                                        "example": "Plot 45, Kampala Road, Kampala",
                                         "nullable": true
                                     },
                                     "id_type": {
-                                        "description": "Type of identification document (optional)",
                                         "type": "string",
                                         "enum": [
                                             "NIN",
                                             "Passport",
                                             "DriverLicense"
                                         ],
-                                        "example": "NIN",
                                         "nullable": true
                                     },
                                     "id_number": {
-                                        "description": "Identification number (optional, will be converted to uppercase)",
                                         "type": "string",
-                                        "maxLength": 50,
-                                        "example": "CM12345678901234",
                                         "nullable": true
                                     },
                                     "profile_photo": {
-                                        "description": "Profile photo URL (optional, must be a valid URL)",
                                         "type": "string",
-                                        "format": "url",
-                                        "maxLength": 500,
-                                        "example": "https://example.com/photos/john.jpg",
                                         "nullable": true
                                     },
                                     "emergency_contact": {
-                                        "description": "Emergency contact phone number (optional)",
                                         "type": "string",
-                                        "maxLength": 255,
-                                        "example": "0700987654",
                                         "nullable": true
                                     }
                                 },
@@ -1434,419 +1786,20 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Profile updated successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Profile updated successfully."
-                                        },
-                                        "data": {
-                                            "description": "Updated user profile data",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Doe"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "john@summitcoaches.com"
-                                                },
-                                                "phone": {
-                                                    "type": "string",
-                                                    "example": "+256700123456"
-                                                },
-                                                "gender": {
-                                                    "type": "string",
-                                                    "example": "male"
-                                                },
-                                                "address": {
-                                                    "type": "string",
-                                                    "example": "Plot 45, Kampala Road, Kampala"
-                                                },
-                                                "id_type": {
-                                                    "type": "string",
-                                                    "example": "NIN"
-                                                },
-                                                "id_number": {
-                                                    "type": "string",
-                                                    "example": "CM12345678901234"
-                                                },
-                                                "profile_photo": {
-                                                    "type": "string",
-                                                    "example": "https://example.com/photos/john.jpg"
-                                                },
-                                                "emergency_contact": {
-                                                    "type": "string",
-                                                    "example": "0700987654"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "13-11-2025 05:30 PM"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Profile updated"
                     },
                     "422": {
-                        "description": "Validation error - Invalid input data or duplicate phone/ID number",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Validation failed"
-                                        },
-                                        "errors": {
-                                            "description": "Validation errors by field",
-                                            "properties": {
-                                                "gender": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The gender must be one of: male, female, or other."
-                                                    }
-                                                },
-                                                "phone": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The phone number is already in use by another user."
-                                                    }
-                                                },
-                                                "id_number": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The ID number is already in use by another user."
-                                                    }
-                                                },
-                                                "profile_photo": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The profile photo must be a valid URL."
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Validation error"
                     },
                     "401": {
-                        "description": "Unauthenticated - No valid token provided",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error - Failed to update profile",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to update profile. Please try again later."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "tags": [
-                    "User Account"
-                ],
-                "summary": "Update authenticated user profile (PATCH - Partial Update)",
-                "description": "Partially update the profile information of the currently authenticated user. Only the provided fields will be updated. Email, role, status, and password cannot be changed through this endpoint. This is the recommended method for partial updates where you only want to change specific fields.",
-                "operationId": "updateProfilePatch",
-                "requestBody": {
-                    "description": "Profile data to update. All fields are optional - only send fields you want to update.",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "name": {
-                                        "description": "Full name of the user",
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "John Doe"
-                                    },
-                                    "phone": {
-                                        "description": "Phone number (accepts: 0700123456, +256700123456, or 256700123456)",
-                                        "type": "string",
-                                        "pattern": "^\\+256\\d{9}$",
-                                        "example": "0700123456"
-                                    },
-                                    "gender": {
-                                        "description": "Gender (must be exactly: male, female, or other - lowercase)",
-                                        "type": "string",
-                                        "enum": [
-                                            "male",
-                                            "female",
-                                            "other"
-                                        ],
-                                        "example": "male"
-                                    },
-                                    "address": {
-                                        "description": "Physical address (optional)",
-                                        "type": "string",
-                                        "maxLength": 500,
-                                        "example": "Plot 45, Kampala Road, Kampala",
-                                        "nullable": true
-                                    },
-                                    "id_type": {
-                                        "description": "Type of identification document (optional)",
-                                        "type": "string",
-                                        "enum": [
-                                            "NIN",
-                                            "Passport",
-                                            "DriverLicense"
-                                        ],
-                                        "example": "NIN",
-                                        "nullable": true
-                                    },
-                                    "id_number": {
-                                        "description": "Identification number (optional, will be converted to uppercase)",
-                                        "type": "string",
-                                        "maxLength": 50,
-                                        "example": "CM12345678901234",
-                                        "nullable": true
-                                    },
-                                    "profile_photo": {
-                                        "description": "Profile photo URL (optional, must be a valid URL)",
-                                        "type": "string",
-                                        "format": "url",
-                                        "maxLength": 500,
-                                        "example": "https://example.com/photos/john.jpg",
-                                        "nullable": true
-                                    },
-                                    "emergency_contact": {
-                                        "description": "Emergency contact phone number (optional)",
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "0700987654",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
+                        "description": "Unauthenticated"
                     }
                 },
-                "responses": {
-                    "200": {
-                        "description": "Profile updated successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Profile updated successfully."
-                                        },
-                                        "data": {
-                                            "description": "Updated user profile data",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Doe"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "john@summitcoaches.com"
-                                                },
-                                                "phone": {
-                                                    "type": "string",
-                                                    "example": "+256700123456"
-                                                },
-                                                "gender": {
-                                                    "type": "string",
-                                                    "example": "male"
-                                                },
-                                                "address": {
-                                                    "type": "string",
-                                                    "example": "Plot 45, Kampala Road, Kampala"
-                                                },
-                                                "id_type": {
-                                                    "type": "string",
-                                                    "example": "NIN"
-                                                },
-                                                "id_number": {
-                                                    "type": "string",
-                                                    "example": "CM12345678901234"
-                                                },
-                                                "profile_photo": {
-                                                    "type": "string",
-                                                    "example": "https://example.com/photos/john.jpg"
-                                                },
-                                                "emergency_contact": {
-                                                    "type": "string",
-                                                    "example": "0700987654"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "example": "13-11-2025 05:30 PM"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error - Invalid input data or duplicate phone/ID number",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Validation failed"
-                                        },
-                                        "errors": {
-                                            "description": "Validation errors by field",
-                                            "properties": {
-                                                "gender": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The gender must be one of: male, female, or other."
-                                                    }
-                                                },
-                                                "phone": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The phone number is already in use by another user."
-                                                    }
-                                                },
-                                                "id_number": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The ID number is already in use by another user."
-                                                    }
-                                                },
-                                                "profile_photo": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "The profile photo must be a valid URL."
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated - No valid token provided",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error - Failed to update profile",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to update profile. Please try again later."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                "security": [
+                    {
+                        "sanctum": []
                     }
-                }
+                ]
             }
         },
         "/auth/photo/update": {
@@ -1855,11 +1808,15 @@
                     "User Account"
                 ],
                 "summary": "Update profile photo",
-                "operationId": "8c2dbced0416a8a2a8dc3455f3c24d65",
+                "operationId": "updatePhoto",
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "multipart/form-data": {
                             "schema": {
+                                "required": [
+                                    "profile_photo"
+                                ],
                                 "properties": {
                                     "profile_photo": {
                                         "type": "string",
@@ -1873,9 +1830,20 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Photo updated successfully"
+                        "description": "Photo updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/auth/password/change": {
@@ -1884,7 +1852,7 @@
                     "User Account"
                 ],
                 "summary": "Change user password",
-                "operationId": "fda315b75d254df9dab2508ff66665b5",
+                "operationId": "changePassword",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1897,13 +1865,17 @@
                                 ],
                                 "properties": {
                                     "old_password": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "format": "password"
                                     },
                                     "new_password": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8
                                     },
                                     "new_password_confirmation": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "format": "password"
                                     }
                                 },
                                 "type": "object"
@@ -1913,133 +1885,79 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Password changed successfully"
+                        "description": "Password changed"
+                    },
+                    "400": {
+                        "description": "Old password incorrect"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/auth/2fa/enable": {
             "post": {
                 "tags": [
-                    "Authentication"
+                    "Two-Factor Authentication"
                 ],
-                "summary": "Enable 2FA authentication",
-                "operationId": "a904ed093ad7f97370ae66fcb4782340",
+                "summary": "Enable 2FA",
+                "operationId": "enable2FA",
                 "responses": {
                     "200": {
-                        "description": "2FA enabled with QR code"
+                        "description": "2FA enabled"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/auth/2fa/disable": {
             "post": {
                 "tags": [
-                    "Authentication"
+                    "Two-Factor Authentication"
                 ],
-                "summary": "Disable Two-Factor Authentication",
-                "description": "Disables 2FA for the authenticated user by clearing their Google Authenticator secret and updating their 2FA status. This requires the user to be authenticated via Sanctum token.",
+                "summary": "Disable 2FA",
                 "operationId": "disable2FA",
                 "responses": {
                     "200": {
-                        "description": "2FA disabled successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Two-factor authentication has been disabled successfully."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "2FA disabled"
                     },
                     "400": {
-                        "description": "2FA is already disabled",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Two-factor authentication is already disabled for this account."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "2FA already disabled"
                     },
                     "401": {
-                        "description": "Unauthorized - User not authenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error - Failed to disable 2FA",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to disable two-factor authentication. Please try again later."
-                                        },
-                                        "errors": {
-                                            "properties": {
-                                                "exception": {
-                                                    "type": "string",
-                                                    "example": "Database connection error"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Unauthenticated"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/auth/2fa/verify": {
             "post": {
                 "tags": [
-                    "Authentication"
+                    "Two-Factor Authentication"
                 ],
                 "summary": "Verify 2FA code",
-                "operationId": "cda9fdb40db08ae1b469ba3f067376b5",
+                "operationId": "verify2FA",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2061,93 +1979,87 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "2FA verification successful"
+                        "description": "2FA verified"
+                    },
+                    "403": {
+                        "description": "Invalid code"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
-        "/bookings": {
-            "get": {
+        "/admin/staff/{id}/approve": {
+            "post": {
                 "tags": [
-                    "Bookings"
+                    "Admin - Staff Management"
                 ],
-                "summary": "Get all bookings with pagination and filters",
-                "operationId": "b89b932c131e727a3720a01899acd0a2",
+                "summary": "Approve staff account",
+                "operationId": "approveStaffAccount",
                 "parameters": [
                     {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Number of items per page",
-                        "required": false,
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
                         "schema": {
                             "type": "integer",
-                            "default": 15
-                        }
-                    },
-                    {
-                        "name": "status",
-                        "in": "query",
-                        "description": "Filter by booking status",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "pending",
-                                "confirmed",
-                                "cancelled"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "payment_status",
-                        "in": "query",
-                        "description": "Filter by payment status",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "unpaid",
-                                "paid"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "booking_type",
-                        "in": "query",
-                        "description": "Filter by booking type",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "passenger",
-                                "luggage",
-                                "parcel",
-                                "mixed"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "trip_id",
-                        "in": "query",
-                        "description": "Filter by trip ID",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "passenger_id",
-                        "in": "query",
-                        "description": "Filter by passenger ID",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
+                            "example": 5
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Bookings retrieved successfully",
+                        "description": "Staff approved"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Staff not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/available-trips": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get available trips for booking",
+                "operationId": "9f76b15cc1e587a217b4f4ccac2d18ba",
+                "parameters": [
+                    {
+                        "name": "route_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "travel_date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Available trips retrieved successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2157,58 +2069,14 @@
                                             "example": true
                                         },
                                         "data": {
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer"
-                                                },
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/Booking"
-                                                    }
-                                                },
-                                                "first_page_url": {
-                                                    "type": "string"
-                                                },
-                                                "from": {
-                                                    "type": "integer"
-                                                },
-                                                "last_page": {
-                                                    "type": "integer"
-                                                },
-                                                "last_page_url": {
-                                                    "type": "string"
-                                                },
-                                                "links": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "next_page_url": {
-                                                    "type": "string"
-                                                },
-                                                "path": {
-                                                    "type": "string"
-                                                },
-                                                "per_page": {
-                                                    "type": "integer"
-                                                },
-                                                "prev_page_url": {
-                                                    "type": "string"
-                                                },
-                                                "to": {
-                                                    "type": "integer"
-                                                },
-                                                "total": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "type": "object"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AvailableTrip"
+                                            }
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Bookings retrieved successfully"
+                                            "example": "Available trips retrieved successfully"
                                         }
                                     },
                                     "type": "object"
@@ -2216,8 +2084,8 @@
                             }
                         }
                     },
-                    "500": {
-                        "description": "Internal server error",
+                    "422": {
+                        "description": "Validation error",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2228,11 +2096,10 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Failed to retrieve bookings"
+                                            "example": "Validation failed"
                                         },
-                                        "error": {
-                                            "type": "string",
-                                            "nullable": true
+                                        "errors": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -2240,13 +2107,148 @@
                             }
                         }
                     }
-                },
-                "security": [
+                }
+            }
+        },
+        "/bookings/{tripId}/available-seats": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get available seats for a trip",
+                "operationId": "b1df554cb17a5e77ceac7c87ebc92e9a",
+                "parameters": [
                     {
-                        "bearerAuth": []
+                        "name": "tripId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
-                ]
-            },
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Available seats retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AvailableSeat"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Available seats retrieved successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Trip not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Trip not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/search-passengers": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Search passengers by phone or name",
+                "operationId": "66bb9020c42c8f76ce11f9fc8cfb4508",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Passengers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PassengerSearchResult"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Passengers retrieved successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings": {
             "post": {
                 "tags": [
                     "Bookings"
@@ -2258,138 +2260,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "trip_id",
-                                    "booking_type",
-                                    "passenger_selection_mode",
-                                    "passenger_type",
-                                    "payment_method",
-                                    "payment_status",
-                                    "status"
-                                ],
-                                "properties": {
-                                    "trip_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "seat_id": {
-                                        "type": "integer",
-                                        "example": 5,
-                                        "nullable": true
-                                    },
-                                    "booking_type": {
-                                        "type": "string",
-                                        "enum": [
-                                            "passenger",
-                                            "luggage",
-                                            "parcel",
-                                            "mixed"
-                                        ],
-                                        "example": "mixed"
-                                    },
-                                    "passenger_selection_mode": {
-                                        "type": "string",
-                                        "enum": [
-                                            "existing",
-                                            "walkin"
-                                        ],
-                                        "example": "walkin"
-                                    },
-                                    "passenger_id": {
-                                        "type": "integer",
-                                        "example": 1,
-                                        "nullable": true
-                                    },
-                                    "walkin_passenger_name": {
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "John Doe"
-                                    },
-                                    "walkin_passenger_phone": {
-                                        "type": "string",
-                                        "maxLength": 20,
-                                        "example": "+256700000000"
-                                    },
-                                    "walkin_passenger_email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "maxLength": 255,
-                                        "example": "john@example.com"
-                                    },
-                                    "passenger_type": {
-                                        "type": "string",
-                                        "enum": [
-                                            "adult",
-                                            "child",
-                                            "senior",
-                                            "student",
-                                            "disabled"
-                                        ],
-                                        "example": "adult"
-                                    },
-                                    "luggage_count": {
-                                        "type": "integer",
-                                        "maximum": 5,
-                                        "minimum": 0,
-                                        "example": 2
-                                    },
-                                    "luggage_type_id": {
-                                        "type": "integer",
-                                        "example": 1,
-                                        "nullable": true
-                                    },
-                                    "luggage_charge": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "minimum": 0,
-                                        "example": 5000
-                                    },
-                                    "parcel_count": {
-                                        "type": "integer",
-                                        "maximum": 10,
-                                        "minimum": 0,
-                                        "example": 1
-                                    },
-                                    "parcel_charge": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "minimum": 0,
-                                        "example": 8000
-                                    },
-                                    "parcel_description": {
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "Important documents"
-                                    },
-                                    "payment_method": {
-                                        "type": "string",
-                                        "enum": [
-                                            "cash",
-                                            "mobile_money",
-                                            "card",
-                                            "bank_transfer"
-                                        ],
-                                        "example": "cash"
-                                    },
-                                    "payment_status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "unpaid",
-                                            "paid"
-                                        ],
-                                        "example": "paid"
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "pending",
-                                            "confirmed",
-                                            "cancelled"
-                                        ],
-                                        "example": "confirmed"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/BookingRequest"
                             }
                         }
                     }
@@ -2406,7 +2277,7 @@
                                             "example": true
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/Booking"
+                                            "$ref": "#/components/schemas/BookingResponse"
                                         },
                                         "message": {
                                             "type": "string",
@@ -2419,7 +2290,7 @@
                         }
                     },
                     "400": {
-                        "description": "Validation error or booking creation failed",
+                        "description": "Booking creation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2430,7 +2301,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Booking creation failed"
+                                            "example": "Booking creation failed: Trip is not available"
                                         }
                                     },
                                     "type": "object"
@@ -2438,8 +2309,8 @@
                             }
                         }
                     },
-                    "500": {
-                        "description": "Internal server error",
+                    "422": {
+                        "description": "Validation error",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2450,11 +2321,10 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Booking creation failed"
+                                            "example": "Validation failed"
                                         },
-                                        "error": {
-                                            "type": "string",
-                                            "nullable": true
+                                        "errors": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -2462,12 +2332,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/bookings/{id}": {
@@ -2475,13 +2340,12 @@
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Get single booking details",
+                "summary": "Get booking details",
                 "operationId": "9a7e24b15b1f9fe6c357532b3c5200a3",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Booking ID",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -2500,7 +2364,7 @@
                                             "example": true
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/BookingDetailed"
+                                            "$ref": "#/components/schemas/BookingResponse"
                                         },
                                         "message": {
                                             "type": "string",
@@ -2532,133 +2396,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "put": {
-                "tags": [
-                    "Bookings"
-                ],
-                "summary": "Update booking status or payment status",
-                "operationId": "620746af203837311ea0dd4fca355623",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Booking ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "pending",
-                                            "confirmed",
-                                            "cancelled"
-                                        ],
-                                        "example": "confirmed"
-                                    },
-                                    "payment_status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "unpaid",
-                                            "paid"
-                                        ],
-                                        "example": "paid"
-                                    },
-                                    "seat_id": {
-                                        "type": "integer",
-                                        "example": 6
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Booking updated successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "$ref": "#/components/schemas/Booking"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Booking updated successfully"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Booking not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Booking not found"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to update booking"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/bookings/{id}/cancel": {
@@ -2672,7 +2410,6 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Booking ID",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -2701,7 +2438,7 @@
                         }
                     },
                     "400": {
-                        "description": "Booking already cancelled",
+                        "description": "Cancellation failed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2712,7 +2449,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Booking is already cancelled"
+                                            "example": "Booking cancellation failed"
                                         }
                                     },
                                     "type": "object"
@@ -2739,47 +2476,21 @@
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to cancel booking"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
-        "/passengers/{passengerId}/bookings": {
+        "/bookings/user-bookings": {
             "get": {
                 "tags": [
                     "Bookings"
                 ],
                 "summary": "Get bookings for a specific passenger",
-                "operationId": "51db7b50ad7f39ec68d88d536d34190f",
+                "operationId": "9a19c7e331e01d05365d628efb9e5e53",
                 "parameters": [
                     {
-                        "name": "passengerId",
-                        "in": "path",
-                        "description": "Passenger ID",
+                        "name": "passenger_id",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -2788,7 +2499,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Passenger bookings retrieved successfully",
+                        "description": "User bookings retrieved successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2805,7 +2516,7 @@
                                                 "data": {
                                                     "type": "array",
                                                     "items": {
-                                                        "$ref": "#/components/schemas/Booking"
+                                                        "$ref": "#/components/schemas/UserBooking"
                                                     }
                                                 },
                                                 "total": {
@@ -2816,7 +2527,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Passenger bookings retrieved successfully"
+                                            "example": "User bookings retrieved successfully"
                                         }
                                     },
                                     "type": "object"
@@ -2824,8 +2535,8 @@
                             }
                         }
                     },
-                    "500": {
-                        "description": "Internal server error",
+                    "422": {
+                        "description": "Validation error",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2836,7 +2547,10 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Failed to retrieve passenger bookings"
+                                            "example": "Validation failed"
+                                        },
+                                        "errors": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -2844,12 +2558,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/cancellations": {
@@ -9527,27 +9236,159 @@
     },
     "components": {
         "schemas": {
-            "Booking": {
+            "AvailableTrip": {
                 "properties": {
                     "id": {
                         "type": "integer",
                         "example": 1
                     },
-                    "reference": {
+                    "trip_code": {
                         "type": "string",
-                        "example": "BK-ABC12345"
+                        "example": "TRP-001"
                     },
-                    "trip_id": {
+                    "departure_time": {
+                        "type": "string",
+                        "format": "time",
+                        "example": "08:00"
+                    },
+                    "arrival_time": {
+                        "type": "string",
+                        "format": "time",
+                        "example": "12:00"
+                    },
+                    "available_seats": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "route": {
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "example": "Kampala to Mbarara"
+                            },
+                            "origin": {
+                                "type": "string",
+                                "example": "Kampala"
+                            },
+                            "destination": {
+                                "type": "string",
+                                "example": "Mbarara"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "bus": {
+                        "properties": {
+                            "registration_number": {
+                                "type": "string",
+                                "example": "UBF 123A"
+                            },
+                            "bus_type": {
+                                "type": "string",
+                                "example": "Executive"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "shift": {
+                        "type": "string",
+                        "example": "Morning Shift"
+                    },
+                    "base_fare": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 25000
+                    }
+                },
+                "type": "object"
+            },
+            "AvailableSeat": {
+                "properties": {
+                    "id": {
                         "type": "integer",
                         "example": 1
                     },
-                    "passenger_id": {
+                    "seat_number": {
+                        "type": "string",
+                        "example": "A01"
+                    },
+                    "seat_type": {
+                        "type": "string",
+                        "example": "standard"
+                    },
+                    "is_window": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "is_available": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "position": {
+                        "properties": {
+                            "x": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "y": {
+                                "type": "integer",
+                                "example": 1
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PassengerSearchResult": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "+256700000000"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "john@example.com"
+                    },
+                    "passenger_type": {
+                        "type": "string",
+                        "example": "adult"
+                    },
+                    "is_walkin": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "BookingRequest": {
+                "required": [
+                    "trip_id",
+                    "booking_type",
+                    "passenger_selection_mode",
+                    "passenger_type",
+                    "payment_method",
+                    "payment_status",
+                    "status",
+                    "base_fare"
+                ],
+                "properties": {
+                    "trip_id": {
                         "type": "integer",
                         "example": 1
                     },
                     "seat_id": {
                         "type": "integer",
-                        "example": 5
+                        "example": 5,
+                        "nullable": true
                     },
                     "booking_type": {
                         "type": "string",
@@ -9558,6 +9399,35 @@
                             "mixed"
                         ],
                         "example": "mixed"
+                    },
+                    "passenger_selection_mode": {
+                        "type": "string",
+                        "enum": [
+                            "existing",
+                            "walkin"
+                        ],
+                        "example": "walkin"
+                    },
+                    "passenger_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "walkin_passenger_name": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "example": "John Doe"
+                    },
+                    "walkin_passenger_phone": {
+                        "type": "string",
+                        "maxLength": 20,
+                        "example": "+256700000000"
+                    },
+                    "walkin_passenger_email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255,
+                        "example": "john@example.com"
                     },
                     "passenger_type": {
                         "type": "string",
@@ -9570,43 +9440,39 @@
                         ],
                         "example": "adult"
                     },
-                    "base_fare": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 35000
-                    },
-                    "discount_amount": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 2000
-                    },
-                    "total_amount": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 33000
-                    },
                     "luggage_count": {
                         "type": "integer",
+                        "maximum": 5,
+                        "minimum": 0,
                         "example": 2
                     },
-                    "parcel_count": {
+                    "luggage_type_id": {
                         "type": "integer",
-                        "example": 1
+                        "example": 1,
+                        "nullable": true
                     },
                     "luggage_charge": {
                         "type": "number",
                         "format": "float",
+                        "minimum": 0,
                         "example": 5000
+                    },
+                    "parcel_count": {
+                        "type": "integer",
+                        "maximum": 10,
+                        "minimum": 0,
+                        "example": 1
                     },
                     "parcel_charge": {
                         "type": "number",
                         "format": "float",
+                        "minimum": 0,
                         "example": 8000
                     },
-                    "grand_total": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 43000
+                    "parcel_description": {
+                        "type": "string",
+                        "maxLength": 255,
+                        "example": "Important documents"
                     },
                     "payment_method": {
                         "type": "string",
@@ -9635,390 +9501,22 @@
                         ],
                         "example": "confirmed"
                     },
-                    "travel_date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2023-12-25"
-                    },
-                    "walkin_passenger_name": {
-                        "type": "string",
-                        "example": "John Doe"
-                    },
-                    "walkin_passenger_phone": {
-                        "type": "string",
-                        "example": "+256700000000"
-                    },
-                    "walkin_passenger_email": {
-                        "type": "string",
-                        "format": "email",
-                        "example": "john@example.com"
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "passenger": {
-                        "properties": {
-                            "user": {
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "John Doe"
-                                    },
-                                    "phone": {
-                                        "type": "string",
-                                        "example": "+256700000000"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        },
-                        "type": "object"
-                    },
-                    "trip": {
-                        "properties": {
-                            "id": {
-                                "type": "integer",
-                                "example": 1
-                            },
-                            "trip_code": {
-                                "type": "string",
-                                "example": "TRP-001"
-                            },
-                            "departure_time": {
-                                "type": "string",
-                                "format": "date-time"
-                            }
-                        },
-                        "type": "object"
-                    },
-                    "seat": {
-                        "properties": {
-                            "id": {
-                                "type": "integer",
-                                "example": 5
-                            },
-                            "seat_number": {
-                                "type": "string",
-                                "example": "A01"
-                            }
-                        },
-                        "type": "object"
-                    },
-                    "clerk": {
-                        "properties": {
-                            "id": {
-                                "type": "integer",
-                                "example": 2
-                            },
-                            "name": {
-                                "type": "string",
-                                "example": "Booking Agent"
-                            }
-                        },
-                        "type": "object"
-                    }
-                },
-                "type": "object"
-            },
-            "Trip": {
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "trip_code": {
-                        "type": "string",
-                        "example": "TRP-001"
-                    },
-                    "trip_date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2023-12-25"
-                    },
-                    "departure_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "arrival_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "scheduled",
-                            "departed",
-                            "arrived",
-                            "cancelled"
-                        ],
-                        "example": "scheduled"
-                    },
-                    "active": {
-                        "type": "boolean",
-                        "example": true
-                    },
-                    "available_seats": {
-                        "type": "integer",
-                        "example": 45
-                    },
-                    "bus_id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "route_id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "shift_id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "type": "object"
-            },
-            "Passenger": {
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "user_id": {
-                        "type": "integer",
-                        "example": 1,
-                        "nullable": true
-                    },
-                    "passenger_type": {
-                        "type": "string",
-                        "enum": [
-                            "adult",
-                            "child",
-                            "senior",
-                            "student",
-                            "disabled"
-                        ],
-                        "example": "adult"
-                    },
-                    "is_verified": {
-                        "type": "boolean",
-                        "example": true
-                    },
-                    "loyalty_points": {
-                        "type": "integer",
-                        "example": 100
-                    },
-                    "walkin_name": {
-                        "type": "string",
-                        "example": "John Doe",
-                        "nullable": true
-                    },
-                    "walkin_phone": {
-                        "type": "string",
-                        "example": "+256700000000",
-                        "nullable": true
-                    },
-                    "walkin_email": {
-                        "type": "string",
-                        "example": "john@example.com",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "Seat": {
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "seat_number": {
-                        "type": "string",
-                        "example": "A01"
-                    },
-                    "seat_type": {
-                        "type": "string",
-                        "enum": [
-                            "standard",
-                            "vip",
-                            "priority"
-                        ],
-                        "example": "standard"
-                    },
-                    "bus_id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "active": {
-                        "type": "boolean",
-                        "example": true
-                    }
-                },
-                "type": "object"
-            },
-            "Luggage": {
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "tracking_code": {
-                        "type": "string",
-                        "example": "LUG-2023-ABC123"
-                    },
-                    "description": {
-                        "type": "string",
-                        "example": "Small suitcase"
-                    },
-                    "weight": {
+                    "base_fare": {
                         "type": "number",
                         "format": "float",
-                        "example": 15.5
+                        "minimum": 0,
+                        "example": 25000
                     },
-                    "charge": {
+                    "discount_amount": {
                         "type": "number",
                         "format": "float",
-                        "example": 5000
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "pending",
-                            "in_transit",
-                            "delivered",
-                            "cancelled"
-                        ],
-                        "example": "pending"
-                    },
-                    "is_with_passenger": {
-                        "type": "boolean",
-                        "example": true
+                        "minimum": 0,
+                        "example": 2000
                     }
                 },
                 "type": "object"
             },
-            "BookingParcel": {
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "tracking_code": {
-                        "type": "string",
-                        "example": "PRC-2023-ABC123"
-                    },
-                    "description": {
-                        "type": "string",
-                        "example": "Important documents"
-                    },
-                    "weight": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 2.5
-                    },
-                    "charge": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 8000
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "pending",
-                            "in_transit",
-                            "delivered",
-                            "cancelled"
-                        ],
-                        "example": "pending"
-                    },
-                    "sender_name": {
-                        "type": "string",
-                        "example": "John Sender"
-                    },
-                    "sender_contact": {
-                        "type": "string",
-                        "example": "+256700111111"
-                    },
-                    "receiver_name": {
-                        "type": "string",
-                        "example": "Jane Receiver"
-                    },
-                    "receiver_contact": {
-                        "type": "string",
-                        "example": "+256700222222"
-                    }
-                },
-                "type": "object"
-            },
-            "BookingTicket": {
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "ticket_number": {
-                        "type": "string",
-                        "example": "TKT-24122023-0001"
-                    },
-                    "seat_number": {
-                        "type": "string",
-                        "example": "A01"
-                    },
-                    "amount_paid": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 43000
-                    },
-                    "payment_method": {
-                        "type": "string",
-                        "enum": [
-                            "cash",
-                            "mobile_money",
-                            "card",
-                            "bank_transfer"
-                        ],
-                        "example": "cash"
-                    },
-                    "payment_status": {
-                        "type": "string",
-                        "enum": [
-                            "pending",
-                            "paid",
-                            "refunded",
-                            "cancelled"
-                        ],
-                        "example": "paid"
-                    },
-                    "travel_date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2023-12-25"
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "active",
-                            "used",
-                            "cancelled",
-                            "expired"
-                        ],
-                        "example": "active"
-                    }
-                },
-                "type": "object"
-            },
-            "Transaction": {
+            "BookingResponse": {
                 "properties": {
                     "id": {
                         "type": "integer",
@@ -10026,178 +9524,286 @@
                     },
                     "reference": {
                         "type": "string",
-                        "example": "TXN-24122023-0001"
+                        "example": "BK-ABC12345"
                     },
-                    "type": {
+                    "booking_type": {
                         "type": "string",
-                        "enum": [
-                            "credit",
-                            "debit",
-                            "transfer",
-                            "refund",
-                            "expense",
-                            "income",
-                            "booking_payment",
-                            "penalty",
-                            "system_adjustment"
-                        ],
-                        "example": "booking_payment"
+                        "example": "mixed"
                     },
-                    "amount": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 43000
-                    },
-                    "currency": {
+                    "status": {
                         "type": "string",
-                        "example": "UGX"
+                        "example": "confirmed"
+                    },
+                    "payment_status": {
+                        "type": "string",
+                        "example": "paid"
                     },
                     "payment_method": {
                         "type": "string",
                         "example": "cash"
                     },
-                    "narration": {
-                        "type": "string",
-                        "example": "Booking payment for BK-ABC12345"
-                    },
-                    "transaction_date": {
+                    "travel_date": {
                         "type": "string",
                         "format": "date",
-                        "example": "2023-12-24"
+                        "example": "2023-12-25"
                     },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "pending",
-                            "completed",
-                            "reversed",
-                            "failed"
-                        ],
-                        "example": "completed"
+                    "base_fare": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 25000
+                    },
+                    "discount_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 2000
+                    },
+                    "total_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 23000
+                    },
+                    "grand_total": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 36000
+                    },
+                    "passenger": {
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "example": "John Doe"
+                            },
+                            "phone": {
+                                "type": "string",
+                                "example": "+256700000000"
+                            },
+                            "email": {
+                                "type": "string",
+                                "example": "john@example.com"
+                            },
+                            "type": {
+                                "type": "string",
+                                "example": "adult"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "trip": {
+                        "properties": {
+                            "trip_code": {
+                                "type": "string",
+                                "example": "TRP-001"
+                            },
+                            "departure_time": {
+                                "type": "string",
+                                "format": "time",
+                                "example": "08:00"
+                            },
+                            "route": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Kampala to Mbarara"
+                                    },
+                                    "origin": {
+                                        "type": "string",
+                                        "example": "Kampala"
+                                    },
+                                    "destination": {
+                                        "type": "string",
+                                        "example": "Mbarara"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "bus": {
+                                "properties": {
+                                    "registration_number": {
+                                        "type": "string",
+                                        "example": "UBF 123A"
+                                    },
+                                    "bus_type": {
+                                        "type": "string",
+                                        "example": "Executive"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "seat": {
+                        "properties": {
+                            "seat_number": {
+                                "type": "string",
+                                "example": "A01"
+                            },
+                            "seat_type": {
+                                "type": "string",
+                                "example": "standard"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "luggages": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "tracking_code": {
+                                    "type": "string",
+                                    "example": "LUG-2023-001"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "example": "Small suitcase"
+                                },
+                                "charge": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 5000
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "example": "pending"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "parcels": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "tracking_code": {
+                                    "type": "string",
+                                    "example": "PRC-2023-001"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "example": "Important documents"
+                                },
+                                "charge": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 8000
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "example": "pending"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "tickets": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "ticket_number": {
+                                    "type": "string",
+                                    "example": "TKT-24122023-0001"
+                                },
+                                "seat_number": {
+                                    "type": "string",
+                                    "example": "A01"
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "example": "active"
+                                }
+                            },
+                            "type": "object"
+                        }
                     }
                 },
                 "type": "object"
             },
-            "BookingDetailed": {
-                "type": "object",
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/Booking"
+            "UserBooking": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
                     },
-                    {
+                    "reference": {
+                        "type": "string",
+                        "example": "BK-ABC12345"
+                    },
+                    "booking_type": {
+                        "type": "string",
+                        "example": "mixed"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "confirmed"
+                    },
+                    "payment_status": {
+                        "type": "string",
+                        "example": "paid"
+                    },
+                    "travel_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2023-12-25"
+                    },
+                    "grand_total": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 36000
+                    },
+                    "trip": {
                         "properties": {
-                            "passenger": {
-                                "properties": {
-                                    "user": {
-                                        "properties": {
-                                            "name": {
-                                                "type": "string"
-                                            },
-                                            "phone": {
-                                                "type": "string"
-                                            },
-                                            "email": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                },
-                                "type": "object"
+                            "trip_code": {
+                                "type": "string",
+                                "example": "TRP-001"
                             },
-                            "trip": {
-                                "properties": {
-                                    "route": {
-                                        "properties": {
-                                            "name": {
-                                                "type": "string"
-                                            },
-                                            "origin": {
-                                                "type": "string"
-                                            },
-                                            "destination": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    },
-                                    "bus": {
-                                        "properties": {
-                                            "bus_type": {
-                                                "properties": {
-                                                    "name": {
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                },
-                                "type": "object"
+                            "departure_time": {
+                                "type": "string",
+                                "format": "time",
+                                "example": "08:00"
                             },
-                            "seat": {
-                                "properties": {
-                                    "seat_number": {
-                                        "type": "string"
-                                    },
-                                    "seat_type": {
-                                        "type": "string"
-                                    }
-                                },
-                                "type": "object"
-                            },
-                            "fare": {
-                                "properties": {
-                                    "base_amount": {
-                                        "type": "number"
-                                    },
-                                    "fare_type": {
-                                        "type": "string"
-                                    }
-                                },
-                                "type": "object"
-                            },
-                            "clerk": {
+                            "route": {
                                 "properties": {
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Kampala to Mbarara"
                                     },
-                                    "email": {
-                                        "type": "string"
+                                    "origin": {
+                                        "type": "string",
+                                        "example": "Kampala"
+                                    },
+                                    "destination": {
+                                        "type": "string",
+                                        "example": "Mbarara"
                                     }
                                 },
                                 "type": "object"
-                            },
-                            "luggages": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/components/schemas/Luggage"
-                                }
-                            },
-                            "parcels": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/components/schemas/BookingParcel"
-                                }
-                            },
-                            "tickets": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/components/schemas/BookingTicket"
-                                }
-                            },
-                            "transactions": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/components/schemas/Transaction"
-                                }
                             }
                         },
                         "type": "object"
+                    },
+                    "seat": {
+                        "type": "string",
+                        "example": "A01"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
                     }
-                ]
+                },
+                "type": "object"
             },
             "ParcelList": {
                 "properties": {
@@ -11980,6 +11586,14 @@
             "description": "Manage account type records for the system"
         },
         {
+            "name": "Authentication",
+            "description": "Authentication and user management endpoints "
+        },
+        {
+            "name": "Bookings",
+            "description": "Booking management endpoints"
+        },
+        {
             "name": "Cancellations",
             "description": "Manage trip and booking cancellations for passengers, agents, and administrators."
         },
@@ -12044,16 +11658,16 @@
             "description": "Transaction management endpoints"
         },
         {
-            "name": "Authentication",
-            "description": "Authentication"
-        },
-        {
             "name": "User Account",
             "description": "User Account"
         },
         {
-            "name": "Bookings",
-            "description": "Bookings"
+            "name": "Two-Factor Authentication",
+            "description": "Two-Factor Authentication"
+        },
+        {
+            "name": "Admin - Staff Management",
+            "description": "Admin - Staff Management"
         },
         {
             "name": "Expense Category",
