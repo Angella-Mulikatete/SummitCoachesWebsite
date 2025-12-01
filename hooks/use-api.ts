@@ -424,6 +424,23 @@ import {
     type Trip,
     type Booking,
     type Route,
+    OpenAPI,
+} from '@/lib/api-client';
+import { authStorage } from '@/lib/auth';
+
+// ==================== AUTHENTICATION ====================
+
+/**
+ * Hook for user registration (staff)
+    TripsService,
+    BookingsService,
+    RoutesService,
+    TicketsService,
+    ParcelsService,
+    type Account,
+    type Trip,
+    type Booking,
+    type Route,
 } from '@/lib/api-client';
 import { authStorage } from '@/lib/auth';
 
@@ -891,9 +908,11 @@ export function useTripsViaRoutes(filters?: {
     return useQuery({
         queryKey: ['trips-via-routes', filters],
         queryFn: async () => {
+            console.log('useTripsViaRoutes called with filters:', filters);
             try {
                 // If no filters, fetch trips directly
                 if (!filters?.origin && !filters?.destination) {
+                    console.log('No origin/destination filters, fetching all trips');
                     const response = await TripsService.ed65B907Bc4Ee55E575689B029B07(
                         undefined,
                         filters?.tripDate,
@@ -904,23 +923,39 @@ export function useTripsViaRoutes(filters?: {
                     return response;
                 }
 
-                // Build search query for routes
-                const searchQuery = filters.origin && filters.destination
-                    ? `${filters.origin} ${filters.destination}`
-                    : filters.origin || filters.destination || '';
+                console.log('Fetching all routes for client-side filtering');
+                // Fetch all routes directly to avoid active=true default in RoutesService
+                const routesResponse = await fetch(`${OpenAPI.BASE}/routes`, {
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                }).then(res => res.json());
 
-                // First, find routes matching the origin/destination
-                const routesResponse = await RoutesService.getAllRoutes(
-                    undefined,
-                    undefined, // active (defaults to true in backend)
-                    searchQuery,
-                    filters.tripDate,
-                    true, // has_trips
-                    undefined
-                );
+                console.log('Fetched routes from API:', routesResponse.data);
+                console.log('Filter criteria:', { origin: filters.origin, destination: filters.destination });
+
+                // Filter routes client-side for better accuracy
+                const matchingRoutes = (routesResponse.data || []).filter((route: any) => {
+                    console.log(`Checking route ${route.id}: ${route.origin} → ${route.destination}`);
+                    let matches = true;
+                    if (filters.origin && filters.origin !== 'all') {
+                        const originMatches = route.origin?.toLowerCase() === filters.origin.toLowerCase();
+                        console.log(`  Origin match: ${route.origin} vs ${filters.origin} = ${originMatches}`);
+                        matches = matches && originMatches;
+                    }
+                    if (filters.destination && filters.destination !== 'all') {
+                        const destMatches = route.destination?.toLowerCase() === filters.destination.toLowerCase();
+                        console.log(`  Dest match: ${route.destination} vs ${filters.destination} = ${destMatches}`);
+                        matches = matches && destMatches;
+                    }
+                    console.log(`  Final match result: ${matches}`);
+                    return matches;
+                });
+
+                console.log('Matching routes:', matchingRoutes);
 
                 // If no routes found, return empty result
-                if (!routesResponse.data || routesResponse.data.length === 0) {
+                if (matchingRoutes.length === 0) {
                     return {
                         data: {
                             trips: []
@@ -929,12 +964,14 @@ export function useTripsViaRoutes(filters?: {
                 }
 
                 // Fetch trips for each matching route
-                const allTripsPromises = routesResponse.data.map(async (route: any) => {
+                const allTripsPromises = matchingRoutes.map(async (route: any) => {
                     try {
+                        console.log(`Fetching trips for route ${route.id} with date ${filters.tripDate}`);
                         const tripsResponse = await RoutesService.getRouteTrips(
                             route.id,
                             filters.tripDate
                         );
+                        console.log(`Trips for route ${route.id}:`, tripsResponse.data?.trips);
                         return tripsResponse.data?.trips || [];
                     } catch (error) {
                         console.error(`Failed to fetch trips for route ${route.id}:`, error);
