@@ -29,7 +29,7 @@ function transformTrip(apiTrip: any): Trip {
     availableSeats: parseInt(apiTrip.remaining_seats || apiTrip.available_seats || apiTrip.availableSeats || 0),
     title: apiTrip.title || (origin && destination ? `${origin} to ${destination}` : 'Bus Trip'),
     description: apiTrip.description || (origin && destination ? `Bus trip from ${origin} to ${destination}` : ''),
-    image: apiTrip.image || apiTrip.thumbnail || '/placeholder-bus.jpg',
+    image: apiTrip.image || apiTrip.thumbnail || '/bus-placeholder.png',
     // Optional fields with defaults
     departureDate: apiTrip.trip_date || apiTrip.departureDate || apiTrip.date,
     departureTime: apiTrip.departure_time_12h || apiTrip.departure_time,
