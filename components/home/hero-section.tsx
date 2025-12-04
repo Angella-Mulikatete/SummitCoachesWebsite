@@ -1,56 +1,216 @@
 "use client"
 
-import { motion } from 'framer-motion'
-import { Search } from 'lucide-react'
+import { useState } from 'react'
+import { motion, Variants } from 'framer-motion'
+import {
+  MapPin,
+  Calendar,
+  Users,
+  ArrowRight,
+  BusFront,
+  Wifi,
+  Armchair
+} from 'lucide-react'
 
 export function HeroSection() {
+  const [tripType, setTripType] = useState('one-way')
+
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  }
+
+  const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 }
+    }
+  }
+
   return (
-    <section className="relative bg-secondary py-20 overflow-hidden">
+    <section className="relative min-h-[85vh] flex flex-col justify-center pt-20 pb-16 overflow-hidden">
+      {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src="https://picsum.photos/1920/1080?blur=4" 
-          alt="Travel background" 
-          className="w-full h-full object-cover opacity-20"
+        <img
+          src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop"
+          alt="Scenic Bus Route"
+          className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-secondary to-transparent"></div>
+        {/* Gradient Overlay using your theme colors - fades from Navy to transparent */}
+        <div className="absolute inset-0 bg-secondary/80 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/60 to-transparent" />
       </div>
-      
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight"
-        >
-          Your Journey, <span className="text-primary">Elevated</span>.
-        </motion.h1>
-        
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl mx-auto"
-        >
-          Discover premium coach travel to breathtaking destinations. 
-          Comfort, safety, and scenic routes guaranteed.
-        </motion.p>
-        
+
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white p-2 rounded-full max-w-lg mx-auto shadow-2xl flex items-center"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-col items-center text-center lg:items-start lg:text-left mb-12"
         >
-          <div className="flex-1 px-4 py-2 border-r border-slate-100 flex items-center gap-2 text-slate-400">
-            <Search className="h-5 w-5" />
-            <input 
-              type="text" 
-              placeholder="Where do you want to go?" 
-              className="w-full outline-none text-slate-800 placeholder:text-slate-400" 
-            />
+          {/* Badge */}
+          {/* <motion.div 
+            variants={itemVariants}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm mb-6"
+          >
+            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+            <span className="text-sm font-medium text-white/90 tracking-wide uppercase">New Routes Available</span>
+          </motion.div> */}
+
+          {/* Headline */}
+          <motion.h1
+            variants={itemVariants}
+            className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-tight"
+          >
+            Travel in Comfort. <br />
+            Arrive in <span className="text-primary transparent-text-stroke">Style.</span>
+          </motion.h1>
+
+          <motion.p
+            variants={itemVariants}
+            className="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl lg:mx-0"
+          >
+            Experience the Summit standard. Premium coaches, spacious seating,
+            and scenic routes across the country.
+          </motion.p>
+
+          {/* Feature Pills */}
+          <motion.div variants={itemVariants} className="flex flex-wrap justify-center lg:justify-start gap-4 mb-10 text-white/80">
+            <div className="flex items-center gap-2">
+              <Wifi className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium">Free Wi-Fi</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Armchair className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium">Extra Legroom</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <BusFront className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium">Modern Fleet</span>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Search Widget Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+          className="w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100"
+        >
+          {/* Tabs */}
+          <div className="flex border-b border-slate-100 bg-slate-50/50">
+            <button
+              onClick={() => setTripType('one-way')}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${tripType === 'one-way'
+                ? 'text-primary border-b-2 border-primary bg-white'
+                : 'text-slate-500 hover:text-secondary'
+                }`}
+            >
+              One Way
+            </button>
+            <button
+              onClick={() => setTripType('round-trip')}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${tripType === 'round-trip'
+                ? 'text-primary border-b-2 border-primary bg-white'
+                : 'text-slate-500 hover:text-secondary'
+                }`}
+            >
+              Round Trip
+            </button>
           </div>
-          <button className="bg-primary hover:bg-primary-hover text-white rounded-full px-6 py-3 font-medium transition-colors">
-            Search
-          </button>
+
+          {/* Inputs Grid */}
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-center">
+
+            {/* From */}
+            <div className={`${tripType === 'round-trip' ? 'lg:col-span-2' : 'lg:col-span-3'} relative group transition-all duration-300`}>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">From</label>
+              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 group-focus-within:border-primary group-focus-within:ring-2 group-focus-within:ring-primary/20 transition-all">
+                <MapPin className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Departure City"
+                  className="bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-400 font-medium"
+                />
+              </div>
+            </div>
+
+            {/* To */}
+            <div className={`${tripType === 'round-trip' ? 'lg:col-span-2' : 'lg:col-span-3'} relative group transition-all duration-300`}>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">To</label>
+              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 group-focus-within:border-primary group-focus-within:ring-2 group-focus-within:ring-primary/20 transition-all">
+                <MapPin className="h-5 w-5 text-accent mr-3 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Destination City"
+                  className="bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-400 font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Departure Date */}
+            <div className="lg:col-span-2 relative group">
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">
+                {tripType === 'round-trip' ? 'Departure' : 'Date'}
+              </label>
+              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 group-focus-within:border-primary group-focus-within:ring-2 group-focus-within:ring-primary/20 transition-all">
+                <Calendar className="h-5 w-5 text-slate-400 mr-3 flex-shrink-0" />
+                <input
+                  type="date"
+                  className="bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-400 font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Return Date - Only for Round Trip */}
+            {tripType === 'round-trip' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="lg:col-span-2 relative group"
+              >
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">Return</label>
+                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 group-focus-within:border-primary group-focus-within:ring-2 group-focus-within:ring-primary/20 transition-all">
+                  <Calendar className="h-5 w-5 text-slate-400 mr-3 flex-shrink-0" />
+                  <input
+                    type="date"
+                    className="bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-400 font-medium"
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Passengers */}
+            <div className="lg:col-span-2 relative group">
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">Passengers</label>
+              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 group-focus-within:border-primary group-focus-within:ring-2 group-focus-within:ring-primary/20 transition-all">
+                <Users className="h-5 w-5 text-slate-400 mr-3 flex-shrink-0" />
+                <select className="bg-transparent border-none outline-none w-full text-slate-800 font-medium cursor-pointer">
+                  <option>1 Passenger</option>
+                  <option>2 Passengers</option>
+                  <option>3+ Passengers</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Search Button */}
+            <div className="lg:col-span-2 h-full flex items-end">
+              <button className="w-full h-[52px] bg-primary hover:bg-primary-hover text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group">
+                Search
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
@@ -58,182 +218,3 @@ export function HeroSection() {
 }
 
 
-
-
-
-
-
-
-
-
-
-// "use client"
-
-// import type React from "react"
-
-// import { useState } from "react"
-// import { useRouter } from "next/navigation"
-// import { Button } from "@/components/ui/button"
-// import { Input } from "@/components/ui/input"
-// import { Label } from "@/components/ui/label"
-// import { Calendar, MapPin, Search, Users } from "lucide-react"
-// import { motion } from "framer-motion"
-
-// export function HeroSection() {
-//   const router = useRouter()
-//   const [searchData, setSearchData] = useState({
-//     origin: "",
-//     destination: "",
-//     date: "",
-//     passengers: "1",
-//   })
-
-//   const handleSearch = (e: React.FormEvent) => {
-//     e.preventDefault()
-//     const params = new URLSearchParams({
-//       origin: searchData.origin,
-//       destination: searchData.destination,
-//       date: searchData.date,
-//       passengers: searchData.passengers,
-//     })
-//     router.push(`/search?${params.toString()}`)
-//   }
-
-//   return (
-//     <section className="relative overflow-hidden bg-gradient-to-br from-primary-light via-white to-primary-light/50 py-16 md:py-24">
-//       {/* Decorative elements */}
-//       <div className="absolute inset-0 overflow-hidden">
-//         <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-//         <div className="absolute -bottom-20 -left-20 h-96 w-96 rounded-full bg-accent/10 blur-3xl" />
-//       </div>
-
-//       <div className="container relative mx-auto px-4">
-//         <div className="mx-auto max-w-4xl text-center">
-//           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-//             <h1 className="mb-6 text-balance text-4xl font-bold leading-tight text-secondary md:text-5xl lg:text-6xl">
-//               Travel Across Uganda with <span className="text-primary">Comfort & Reliability</span>
-//             </h1>
-//             <p className="mb-8 text-pretty text-lg text-secondary-light md:text-xl">
-//               Book your bus tickets online and enjoy a seamless journey to your destination
-//             </p>
-//           </motion.div>
-
-//           {/* Search Form */}
-//           <motion.div
-//             initial={{ opacity: 0, y: 30 }}
-//             animate={{ opacity: 1, y: 0 }}
-//             transition={{ duration: 0.6, delay: 0.2 }}
-//             className="mx-auto max-w-3xl"
-//           >
-//             <form onSubmit={handleSearch} className="rounded-2xl bg-white p-6 shadow-xl md:p-8">
-//               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-//                 <div className="space-y-2">
-//                   <Label htmlFor="origin" className="text-sm font-medium">
-//                     From
-//                   </Label>
-//                   <div className="relative">
-//                     <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-//                     <Input
-//                       id="origin"
-//                       placeholder="Kampala"
-//                       value={searchData.origin}
-//                       onChange={(e) => setSearchData({ ...searchData, origin: e.target.value })}
-//                       className="pl-10"
-//                       required
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <div className="space-y-2">
-//                   <Label htmlFor="destination" className="text-sm font-medium">
-//                     To
-//                   </Label>
-//                   <div className="relative">
-//                     <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-//                     <Input
-//                       id="destination"
-//                       placeholder="Mbarara"
-//                       value={searchData.destination}
-//                       onChange={(e) => setSearchData({ ...searchData, destination: e.target.value })}
-//                       className="pl-10"
-//                       required
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <div className="space-y-2">
-//                   <Label htmlFor="date" className="text-sm font-medium">
-//                     Date
-//                   </Label>
-//                   <div className="relative">
-//                     <Calendar className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-//                     <Input
-//                       id="date"
-//                       type="date"
-//                       value={searchData.date}
-//                       onChange={(e) => setSearchData({ ...searchData, date: e.target.value })}
-//                       className="pl-10"
-//                       min={new Date().toISOString().split("T")[0]}
-//                       required
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <div className="space-y-2">
-//                   <Label htmlFor="passengers" className="text-sm font-medium">
-//                     Passengers
-//                   </Label>
-//                   <div className="relative">
-//                     <Users className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-//                     <Input
-//                       id="passengers"
-//                       type="number"
-//                       min="1"
-//                       max="10"
-//                       value={searchData.passengers}
-//                       onChange={(e) => setSearchData({ ...searchData, passengers: e.target.value })}
-//                       className="pl-10"
-//                       required
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <Button type="submit" size="lg" className="mt-6 w-full md:w-auto">
-//                 <Search className="mr-2 h-5 w-5" />
-//                 Search Trips
-//               </Button>
-//             </form>
-//           </motion.div>
-
-//           {/* Trust Indicators */}
-//           <motion.div
-//             initial={{ opacity: 0 }}
-//             animate={{ opacity: 1 }}
-//             transition={{ duration: 0.6, delay: 0.4 }}
-//             className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-secondary-light"
-//           >
-//             <div className="flex items-center space-x-2">
-//               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-//                 <span className="text-lg font-bold text-primary">10+</span>
-//               </div>
-//               <span>Years of Service</span>
-//             </div>
-//             <div className="flex items-center space-x-2">
-//               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-//                 <span className="text-lg font-bold text-primary">50+</span>
-//               </div>
-//               <span>Daily Trips</span>
-//             </div>
-//             <div className="flex items-center space-x-2">
-//               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-//                 <span className="text-lg font-bold text-primary">99%</span>
-//               </div>
-//               <span>On-Time Arrival</span>
-//             </div>
-//           </motion.div>
-//         </div>
-//       </div>
-//     </section>
-//   )
-// }

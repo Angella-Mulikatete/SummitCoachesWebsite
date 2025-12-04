@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
-const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://summit.mellonhardware.com/api';
+const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://admin.summitcoachesug.com/api/v1';
 
 // GET /api/bookings - Get user's bookings (requires auth)
 export async function GET(request: NextRequest) {
@@ -29,10 +29,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to fetch bookings',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );
@@ -55,8 +55,8 @@ export async function POST(request: NextRequest) {
 
     if (!trip_id || !passenger_name || !passenger_phone || !passenger_email || !seat_numbers) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: 'Missing required fields',
           errors: {
             trip_id: !trip_id ? ['Trip ID is required'] : [],
@@ -85,10 +85,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to create booking',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );

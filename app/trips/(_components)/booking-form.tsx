@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import { useCreateBooking } from '@/lib/hooks'
-import { Trip } from '@/app/types'
+import { Trip } from '@/lib/types'
 
 interface BookingFormProps {
   trip: Trip
@@ -20,7 +20,7 @@ export function BookingForm({ trip, onCancel }: BookingFormProps) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const { createBooking } = useCreateBooking()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +31,7 @@ export function BookingForm({ trip, onCancel }: BookingFormProps) {
     try {
       // Create array of seat numbers (you may need to adjust this logic based on your needs)
       const seatNumbers = Array.from({ length: formData.guests }, (_, i) => `SEAT-${i + 1}`)
-      
+
       const response = await createBooking({
         trip_id: trip.id,
         passenger_name: formData.name,

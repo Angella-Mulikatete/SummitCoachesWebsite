@@ -3,13 +3,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
-const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://summit.mellonhardware.com/api';
+const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://admin.summitcoachesug.com/api/v1';
 
 // GET /api/trips - Get all trips or search with query params
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    
+
     // Build query parameters
     const params = {
       origin: searchParams.get('origin'),
@@ -32,14 +32,16 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    console.log("Trip Response data:", response.data);
+
     return NextResponse.json(response.data, { status: 200 });
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to fetch trips',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );
@@ -74,10 +76,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to create trip',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );

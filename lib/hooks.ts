@@ -17,18 +17,36 @@ const fetcher = async (url: string) => {
  * Transform API trip data to include frontend-friendly fields
  */
 function transformTrip(apiTrip: any): Trip {
+  // Handle nested route object if present
+  const origin = apiTrip.route?.origin || apiTrip.origin || '';
+  const destination = apiTrip.route?.destination || apiTrip.destination || '';
+
   return {
     ...apiTrip,
+    id: apiTrip.id,
     // Map API fields to frontend fields
     price: apiTrip.fare || apiTrip.price || 0,
-    availableSeats: apiTrip.available_seats || apiTrip.availableSeats || 0,
-    title: apiTrip.title || `${apiTrip.origin} to ${apiTrip.destination}`,
-    description: apiTrip.description || `Bus trip from ${apiTrip.origin} to ${apiTrip.destination}`,
+    availableSeats: parseInt(apiTrip.remaining_seats || apiTrip.available_seats || apiTrip.availableSeats || 0),
+    title: apiTrip.title || (origin && destination ? `${origin} to ${destination}` : 'Bus Trip'),
+    description: apiTrip.description || (origin && destination ? `Bus trip from ${origin} to ${destination}` : ''),
     image: apiTrip.image || apiTrip.thumbnail || '/placeholder-bus.jpg',
     // Optional fields with defaults
-    departureDate: apiTrip.departureDate || apiTrip.date,
+    departureDate: apiTrip.trip_date || apiTrip.departureDate || apiTrip.date,
+    departureTime: apiTrip.departure_time_12h || apiTrip.departure_time,
+    arrivalTime: apiTrip.arrival_time_12h || apiTrip.arrival_time,
     returnDate: apiTrip.returnDate || undefined,
     features: apiTrip.features || [],
+    // Nested objects
+    bus: apiTrip.bus ? {
+      registrationNumber: apiTrip.bus.registration_number,
+      type: apiTrip.bus.bus_type?.name || 'Standard',
+      capacity: apiTrip.bus.capacity
+    } : undefined,
+    route: apiTrip.route ? {
+      origin: apiTrip.route.origin,
+      destination: apiTrip.route.destination,
+      name: apiTrip.route.name
+    } : undefined
   }
 }
 
@@ -39,13 +57,13 @@ export function useTrips(params?: Record<string, any>) {
   // Construct query string from params
   const queryString = params
     ? '?' + new URLSearchParams(
-        Object.entries(params).reduce((acc, [key, val]) => {
-          if (val !== undefined && val !== null) {
-            acc[key] = String(val)
-          }
-          return acc
-        }, {} as Record<string, string>)
-      ).toString()
+      Object.entries(params).reduce((acc, [key, val]) => {
+        if (val !== undefined && val !== null) {
+          acc[key] = String(val)
+        }
+        return acc
+      }, {} as Record<string, string>)
+    ).toString()
     : ''
 
   const { data, error, isLoading, mutate } = useSWR<ApiResponse<any[]>>(
@@ -58,7 +76,36 @@ export function useTrips(params?: Record<string, any>) {
   )
 
   // Transform API response to Trip[]
-  const trips: Trip[] = data?.data ? data.data.map(transformTrip) : []
+  let trips: Trip[] = []
+
+  if (data) {
+    // Check for API error response
+    if ((data as any).success === false) {
+      console.error('useTrips - API returned error:', (data as any).message)
+      return { trips: [], isLoading: false, isError: (data as any).message || 'API Error', mutate }
+    }
+
+    const innerData = (data as any).data
+
+    if (innerData) {
+      // Check for 'trips' property (custom structure)
+      if (innerData.trips && Array.isArray(innerData.trips)) {
+        trips = innerData.trips.map(transformTrip)
+      }
+      // Check for Laravel pagination structure (data.data)
+      else if (innerData.data && Array.isArray(innerData.data)) {
+        trips = innerData.data.map(transformTrip)
+      } else if (Array.isArray(innerData)) {
+        trips = innerData.map(transformTrip)
+      } else {
+        console.error('useTrips - innerData is not an array or pagination object:', innerData)
+      }
+    } else if (Array.isArray(data)) {
+      trips = data.map(transformTrip)
+    } else {
+      console.error('useTrips - Unexpected data structure:', data)
+    }
+  }
 
   return {
     trips,
@@ -264,57 +311,3 @@ export function usePaymentStatus(paymentId: string | number) {
     mutate,
   }
 }
-
-
-
-
-
-// import useSWR from 'swr'
-// import { api, API_ENDPOINTS } from './api'
-// import { Trip } from './types'
-
-// // Fetcher function for SWR - calls /app/api/ routes
-// const fetcher = (url: string) => api.get(url)
-
-// export function useTrips(params?: Record<string, any>) {
-//     // Construct query string from params
-//     const queryString = params
-//         ? '?' + new URLSearchParams(Object.entries(params).reduce((acc, [key, val]) => {
-//             if (val) acc[key] = String(val);
-//             return acc;
-//         }, {} as Record<string, string>)).toString()
-//         : ''
-
-//     const { data, error, isLoading, mutate } = useSWR(
-//         `${API_ENDPOINTS.trips}${queryString}`,
-//         fetcher
-//     )
-
-//     return {
-//         trips: ((data as any)?.data || []) as Trip[],
-//         isLoading,
-//         isError: error,
-//         mutate
-//     }
-// }
-
-// export function useTrip(id: string) {
-//     const { data, error, isLoading } = useSWR(
-//         id ? API_ENDPOINTS.tripDetails(id) : null,
-//         fetcher
-//     )
-
-//     return {
-//         trip: data as Trip,
-//         isLoading,
-//         isError: error
-//     }
-// }
-
-// export function useCreateBooking() {
-//     const createBooking = async (data: any) => {
-//         return api.post(API_ENDPOINTS.bookings, data)
-//     }
-
-//     return { createBooking }
-// }

@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
-const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://summit.mellonhardware.com/api';
+const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://admin.summitcoachesug.com/api/v1';
 
 // POST /api/payments - Initialize payment
 export async function POST(request: NextRequest) {
@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
 
     if (!booking_id || !amount || !phone_number || !payment_method) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: 'Missing required fields',
           errors: {
             booking_id: !booking_id ? ['Booking ID is required'] : [],
@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to initialize payment',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );

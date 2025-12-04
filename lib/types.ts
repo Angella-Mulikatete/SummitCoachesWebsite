@@ -3,7 +3,7 @@
 // ==================== TRIP TYPES ====================
 export interface Trip {
   // Required fields from Laravel API
-  id: number | string
+  id: number
   origin: string
   destination: string
   departure_time: string
@@ -17,21 +17,35 @@ export interface Trip {
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
   created_at: string
   updated_at: string
-  
+
   // Frontend display fields
   title: string
   description: string
   image: string
   thumbnail?: string
-  
+
   // Computed/optional fields for frontend compatibility
   price: number // Same as fare
   availableSeats: number // Same as available_seats
-  
+
   // Optional fields that may be needed by TripCard
   departureDate?: string
   returnDate?: string
   features?: string[]
+  departureTime?: string
+  arrivalTime?: string
+
+  // Nested objects
+  bus?: {
+    registrationNumber: string
+    type: string
+    capacity: string
+  }
+  route?: {
+    origin: string
+    destination: string
+    name: string
+  }
 }
 
 export interface SearchTripsParams {

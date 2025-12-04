@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
-const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://summit.mellonhardware.com/api';
+const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://admin.summitcoachesug.com/api/v1';
 
 // GET /api/trips/[id] - Get specific trip
 export async function GET(
@@ -22,10 +22,10 @@ export async function GET(
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Trip not found',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );
@@ -63,10 +63,10 @@ export async function PUT(
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to update trip',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );
@@ -99,10 +99,10 @@ export async function DELETE(
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to delete trip',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );
