@@ -2,7 +2,7 @@
 
 import useSWR from 'swr'
 import axios from 'axios'
-import { Trip, Booking, ApiResponse } from './types'
+import { Trip, Booking, ApiResponse, Route, RouteSearchParams, RouteWithTrips } from './types'
 
 // API base URL (calls Next.js API routes)
 const API_BASE = '/api'
@@ -108,6 +108,107 @@ export function useTrips(params?: Record<string, any>) {
   }
 
   return {
+    trips,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+/**
+ * Hook to fetch routes with optional filters
+ */
+export function useRoutes(params?: RouteSearchParams) {
+  // Construct query string from params
+  const queryString = params
+    ? '?' + new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, val]) => {
+        if (val !== undefined && val !== null) {
+          acc[key] = String(val)
+        }
+        return acc
+      }, {} as Record<string, string>)
+    ).toString()
+    : ''
+
+  const { data, error, isLoading, mutate } = useSWR<ApiResponse<Route[]>>(
+    `${API_BASE}/routes${queryString}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+    }
+  )
+
+  // Extract routes from response
+  let routes: Route[] = []
+
+  if (data) {
+    // Check for API error response
+    if ((data as any).success === false) {
+      console.error('useRoutes - API returned error:', (data as any).message)
+      return { routes: [], isLoading: false, isError: (data as any).message || 'API Error', mutate }
+    }
+
+    const innerData = (data as any).data
+
+    if (Array.isArray(innerData)) {
+      routes = innerData
+    } else if (innerData?.data && Array.isArray(innerData.data)) {
+      routes = innerData.data
+    } else {
+      console.error('useRoutes - Unexpected data structure:', data)
+    }
+  }
+
+  return {
+    routes,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+/**
+ * Hook to fetch trips for a specific route
+ */
+export function useRouteTrips(routeId: string | number, params?: { date?: string; date_filter?: string; min_seats?: number }) {
+  // Construct query string from params
+  const queryString = params
+    ? '?' + new URLSearchParams(
+      Object.entries(params).reduce((acc, [key, val]) => {
+        if (val !== undefined && val !== null) {
+          acc[key] = String(val)
+        }
+        return acc
+      }, {} as Record<string, string>)
+    ).toString()
+    : ''
+
+  const { data, error, isLoading, mutate } = useSWR<ApiResponse<RouteWithTrips>>(
+    routeId ? `${API_BASE}/routes/${routeId}/trips${queryString}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  )
+
+  // Extract route and trips from response
+  let route: Route | undefined = undefined
+  let trips: Trip[] = []
+
+  if (data && (data as any).success !== false) {
+    const innerData = (data as any).data
+    if (innerData) {
+      route = innerData.route
+      if (Array.isArray(innerData.trips)) {
+        trips = innerData.trips.map(transformTrip)
+      }
+    }
+  }
+
+  return {
+    route,
     trips,
     isLoading,
     isError: error,

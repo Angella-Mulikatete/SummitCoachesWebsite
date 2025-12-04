@@ -1,5 +1,49 @@
 // src/lib/types.ts
 
+// ==================== ROUTE TYPES ====================
+export interface Route {
+  id: string | number
+  name: string
+  code: string
+  direction: 'departure' | 'arrival'
+  distance_km: number | null
+  duration_minutes: number | null
+  active: string | boolean
+  company_name: string
+  origin: string
+  destination: string
+  base_fare: string | number
+}
+
+export interface RouteFare {
+  id: string | number
+  base_amount: string | number
+  fare_type: 'standard' | 'peak' | 'off-peak'
+  is_peak: string | boolean
+  active: string | boolean
+  bus_type_name: string
+}
+
+export interface RouteWithFares {
+  route: Route
+  fares: RouteFare[]
+}
+
+export interface RouteWithTrips {
+  route: Route
+  trips: Trip[]
+}
+
+export interface RouteSearchParams {
+  company_id?: number
+  active?: boolean
+  search?: string
+  date_filter?: 'today' | 'tomorrow' | 'week'
+  min_seats?: number
+  origin?: string
+  destination?: string
+}
+
 // ==================== TRIP TYPES ====================
 export interface Trip {
   // Required fields from Laravel API

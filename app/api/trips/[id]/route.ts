@@ -8,10 +8,11 @@ const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://admin.summitcoach
 // GET /api/trips/[id] - Get specific trip
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const response = await axios.get(`${LARAVEL_API_URL}/trips/${params.id}`, {
+    const response = await axios.get(`${LARAVEL_API_URL}/trips/${id}`, {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -41,14 +42,15 @@ export async function GET(
 // PUT /api/trips/[id] - Update trip (admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const token = request.headers.get('authorization');
 
     const response = await axios.put(
-      `${LARAVEL_API_URL}/trips/${params.id}`,
+      `${LARAVEL_API_URL}/trips/${id}`,
       body,
       {
         headers: {
@@ -82,12 +84,13 @@ export async function PUT(
 // DELETE /api/trips/[id] - Delete trip (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const token = request.headers.get('authorization');
 
-    const response = await axios.delete(`${LARAVEL_API_URL}/trips/${params.id}`, {
+    const response = await axios.delete(`${LARAVEL_API_URL}/trips/${id}`, {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',

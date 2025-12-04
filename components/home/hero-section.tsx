@@ -9,11 +9,40 @@ import {
   ArrowRight,
   BusFront,
   Wifi,
-  Armchair
+  Armchair,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
+import { useRoutes, useRouteTrips } from '@/lib/hooks'
+import { Route } from '@/lib/types'
 
 export function HeroSection() {
   const [tripType, setTripType] = useState('one-way')
+  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
+  const [departureDate, setDepartureDate] = useState('')
+  const [returnDate, setReturnDate] = useState('')
+  const [passengers, setPassengers] = useState('1')
+  const [searching, setSearching] = useState(false)
+  const [searchTriggered, setSearchTriggered] = useState(false)
+
+  // Fetch available routes (fetch all routes without filters)
+  const { routes, isLoading: routesLoading, isError: routesError } = useRoutes()
+
+  // Fetch trips for the selected route and date
+  const { trips, isLoading: tripsLoading, route: routeDetails } = useRouteTrips(
+    searchTriggered && selectedRoute ? selectedRoute.id : null as any,
+    searchTriggered && departureDate ? { date: departureDate } : undefined
+  )
+
+  const handleSearch = () => {
+    if (!selectedRoute || !departureDate) {
+      return
+    }
+    setSearching(true)
+    setSearchTriggered(true)
+    // The useRouteTrips hook will automatically fetch when searchTriggered becomes true
+    setTimeout(() => setSearching(false), 500)
+  }
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -56,15 +85,6 @@ export function HeroSection() {
           animate="visible"
           className="flex flex-col items-center text-center lg:items-start lg:text-left mb-12"
         >
-          {/* Badge */}
-          {/* <motion.div 
-            variants={itemVariants}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm mb-6"
-          >
-            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-            <span className="text-sm font-medium text-white/90 tracking-wide uppercase">New Routes Available</span>
-          </motion.div> */}
-
           {/* Headline */}
           <motion.h1
             variants={itemVariants}
@@ -131,29 +151,39 @@ export function HeroSection() {
           {/* Inputs Grid */}
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-center">
 
-            {/* From */}
-            <div className={`${tripType === 'round-trip' ? 'lg:col-span-2' : 'lg:col-span-3'} relative group transition-all duration-300`}>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">From</label>
+            {/* Route Selection */}
+            <div className={`${tripType === 'round-trip' ? 'lg:col-span-4' : 'lg:col-span-6'} relative group transition-all duration-300`}>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">Route</label>
               <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 group-focus-within:border-primary group-focus-within:ring-2 group-focus-within:ring-primary/20 transition-all">
                 <MapPin className="h-5 w-5 text-primary mr-3 flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Departure City"
-                  className="bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-400 font-medium"
-                />
-              </div>
-            </div>
-
-            {/* To */}
-            <div className={`${tripType === 'round-trip' ? 'lg:col-span-2' : 'lg:col-span-3'} relative group transition-all duration-300`}>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">To</label>
-              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 group-focus-within:border-primary group-focus-within:ring-2 group-focus-within:ring-primary/20 transition-all">
-                <MapPin className="h-5 w-5 text-accent mr-3 flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Destination City"
-                  className="bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-400 font-medium"
-                />
+                {routesLoading ? (
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">Loading routes...</span>
+                  </div>
+                ) : routesError ? (
+                  <div className="flex items-center gap-2 text-red-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm">Error loading routes</span>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedRoute?.id || ''}
+                    onChange={(e) => {
+                      const route = routes.find(r => String(r.id) === e.target.value)
+                      setSelectedRoute(route || null)
+                      setSearchTriggered(false)
+                    }}
+                    className="bg-transparent border-none outline-none w-full text-slate-800 font-medium cursor-pointer"
+                  >
+                    <option value="">Select Route</option>
+                    {routes.map((route) => (
+                      <option key={route.id} value={route.id}>
+                        {route.name} - UGX {Number(route.base_fare).toLocaleString()}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
 
@@ -166,6 +196,12 @@ export function HeroSection() {
                 <Calendar className="h-5 w-5 text-slate-400 mr-3 flex-shrink-0" />
                 <input
                   type="date"
+                  value={departureDate}
+                  onChange={(e) => {
+                    setDepartureDate(e.target.value)
+                    setSearchTriggered(false)
+                  }}
+                  min={new Date().toISOString().split('T')[0]}
                   className="bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-400 font-medium"
                 />
               </div>
@@ -184,6 +220,9 @@ export function HeroSection() {
                   <Calendar className="h-5 w-5 text-slate-400 mr-3 flex-shrink-0" />
                   <input
                     type="date"
+                    value={returnDate}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                    min={departureDate || new Date().toISOString().split('T')[0]}
                     className="bg-transparent border-none outline-none w-full text-slate-800 placeholder:text-slate-400 font-medium"
                   />
                 </div>
@@ -195,26 +234,111 @@ export function HeroSection() {
               <label className="block text-xs font-semibold text-slate-400 uppercase mb-1 ml-1">Passengers</label>
               <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 group-focus-within:border-primary group-focus-within:ring-2 group-focus-within:ring-primary/20 transition-all">
                 <Users className="h-5 w-5 text-slate-400 mr-3 flex-shrink-0" />
-                <select className="bg-transparent border-none outline-none w-full text-slate-800 font-medium cursor-pointer">
-                  <option>1 Passenger</option>
-                  <option>2 Passengers</option>
-                  <option>3+ Passengers</option>
+                <select
+                  value={passengers}
+                  onChange={(e) => setPassengers(e.target.value)}
+                  className="bg-transparent border-none outline-none w-full text-slate-800 font-medium cursor-pointer"
+                >
+                  <option value="1">1 Passenger</option>
+                  <option value="2">2 Passengers</option>
+                  <option value="3">3+ Passengers</option>
                 </select>
               </div>
             </div>
 
             {/* Search Button */}
             <div className="lg:col-span-2 h-full flex items-end">
-              <button className="w-full h-[52px] bg-primary hover:bg-primary-hover text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group">
-                Search
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <button
+                onClick={handleSearch}
+                disabled={!selectedRoute || !departureDate || searching}
+                className="w-full h-[52px] bg-primary hover:bg-primary-hover text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {searching || tripsLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    Search
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
             </div>
           </div>
         </motion.div>
+
+        {/* Search Results */}
+        {searchTriggered && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="mt-6 bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 p-6"
+          >
+            <h3 className="text-xl font-bold text-secondary mb-4">
+              {routeDetails ? `Trips: ${routeDetails.name}` : 'Search Results'}
+            </h3>
+
+            {tripsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-3 text-slate-600">Finding available trips...</span>
+              </div>
+            ) : trips.length === 0 ? (
+              <div className="text-center py-12">
+                <AlertCircle className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-slate-700 mb-2">No Trips Available</h4>
+                <p className="text-slate-500">
+                  There are no trips available for this route on {new Date(departureDate).toLocaleDateString()}.
+                  Please try a different date.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {trips.map((trip) => (
+                  <div
+                    key={trip.id}
+                    className="border border-slate-200 rounded-xl p-4 hover:border-primary hover:shadow-md transition-all"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex-1 min-w-[200px]">
+                        <h4 className="font-bold text-secondary mb-1">{trip.title}</h4>
+                        <p className="text-sm text-slate-600">{trip.description}</p>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500 uppercase mb-1">Departure</p>
+                          <p className="font-semibold text-secondary">{trip.departureTime}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500 uppercase mb-1">Arrival</p>
+                          <p className="font-semibold text-secondary">{trip.arrivalTime}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500 uppercase mb-1">Available Seats</p>
+                          <p className="font-semibold text-green-600">{trip.availableSeats}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500 uppercase mb-1">Fare</p>
+                          <p className="font-bold text-lg text-primary">UGX {trip.price.toLocaleString()}</p>
+                        </div>
+                        <button className="px-6 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all">
+                          Book Now
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
     </section>
   )
 }
+
 
 
