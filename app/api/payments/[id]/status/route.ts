@@ -8,13 +8,14 @@ const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://summit.mellonhar
 // GET /api/payments/[id]/status - Check payment status
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = request.headers.get('authorization');
 
     const response = await axios.get(
-      `${LARAVEL_API_URL}/payments/${params.id}/status`,
+      `${LARAVEL_API_URL}/payments/${id}/status`,
       {
         headers: {
           'Accept': 'application/json',

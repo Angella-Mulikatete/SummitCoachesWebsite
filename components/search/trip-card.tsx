@@ -97,7 +97,7 @@ export function TripCard({ trip, passengers }: TripCardProps) {
             <span>{trip.route.estimatedDuration}</span>
           </div>
 
-          <Link href={`/trip/${trip.id}?passengers=${passengers}`}>
+          <Link href={`/booking/${trip.id}?passengers=${passengers}`}>
             <Button>
               Select Seats
               <ArrowRight className="ml-2 h-4 w-4" />

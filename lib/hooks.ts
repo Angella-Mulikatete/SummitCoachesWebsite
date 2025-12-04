@@ -1,5 +1,6 @@
 // src/lib/hooks.ts
 
+import { useState } from 'react'
 import useSWR from 'swr'
 import axios from 'axios'
 import { Trip, Booking, ApiResponse, Route, RouteSearchParams, RouteWithTrips } from './types'
@@ -260,14 +261,10 @@ export function useAvailableSeats(tripId: string | number) {
  * Hook to create a booking
  */
 export function useCreateBooking() {
-  const createBooking = async (bookingData: {
-    trip_id: number | string
-    passenger_name: string
-    passenger_email: string
-    passenger_phone: string
-    seat_numbers: string[]
-    passenger_id_number?: string
-  }) => {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const createBooking = async (bookingData: any) => {
+    setIsLoading(true)
     try {
       const response = await axios.post<ApiResponse<Booking>>(
         `${API_BASE}/bookings`,
@@ -281,27 +278,25 @@ export function useCreateBooking() {
         )
       }
       throw error
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  return { createBooking }
+  return { createBooking, isLoading }
 }
 
 /**
  * Hook to fetch user's bookings (requires auth)
  */
-export function useMyBookings() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+export function useMyBookings(status?: string) {
+  const queryString = status ? `?status=${status}` : ''
 
   const { data, error, isLoading, mutate } = useSWR<ApiResponse<Booking[]>>(
-    token ? `${API_BASE}/bookings` : null,
-    async (url: string) => {
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      return response.data
+    `${API_BASE}/my-bookings${queryString}`,
+    fetcher,
+    {
+      revalidateOnFocus: true,
     }
   )
 
@@ -407,6 +402,102 @@ export function usePaymentStatus(paymentId: string | number) {
 
   return {
     payment: data?.data,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+// ==================== SEAT HOOKS ====================
+
+/**
+ * Hook to fetch seats for a trip
+ */
+export function useTripSeats(tripId: string | number | null) {
+  const { data, error, isLoading, mutate } = useSWR<any>(
+    tripId ? `${API_BASE}/seats/trip/${tripId}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: true,
+    }
+  )
+
+  return {
+    seats: data?.data || [],
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+// ==================== PASSENGER HOOKS ====================
+
+/**
+ * Hook to lookup passenger by phone number
+ */
+export function useLookupPassenger(phone: string | null) {
+  const { data, error, isLoading, mutate } = useSWR<any>(
+    phone ? `${API_BASE}/passengers/lookup?phone=${encodeURIComponent(phone)}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      shouldRetryOnError: false,
+    }
+  )
+
+  return {
+    passenger: data?.data || null,
+    exists: !!data?.data,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+// ==================== PROMO CODE HOOKS ====================
+
+/**
+ * Hook to validate promo code
+ */
+export function useValidatePromoCode() {
+  const validatePromo = async (code: string, amount: number, context?: any) => {
+    try {
+      const response = await axios.post(`${API_BASE}/promo-codes/validate`, {
+        code,
+        amount,
+        ...context,
+      })
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(
+          error.response?.data?.message || 'Failed to validate promo code'
+        )
+      }
+      throw error
+    }
+  }
+
+  return { validatePromo }
+}
+
+// ==================== BOOKING SUMMARY HOOKS ====================
+
+/**
+ * Hook to fetch booking summary statistics
+ */
+export function useBookingSummary() {
+  const { data, error, isLoading, mutate } = useSWR<any>(
+    `${API_BASE}/bookings/summary`,
+    fetcher,
+    {
+      revalidateOnFocus: true,
+    }
+  )
+
+  return {
+    summary: data?.data || null,
     isLoading,
     isError: error,
     mutate,

@@ -3,25 +3,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
-const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://summit.mellonhardware.com/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://admin.summitcoachesug.com/api/docs';
 
-// POST /api/bookings/[id]/cancel - Cancel a booking
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.headers.get('authorization');
-    const body = await request.json().catch(() => ({})); // Optional body for cancellation reason
-
+    const { id } = await params;
+    
     const response = await axios.post(
-      `${LARAVEL_API_URL}/bookings/${params.id}/cancel`,
-      body,
+      `${API_BASE_URL}/bookings/${id}/cancel`,
+      {},
       {
         headers: {
-          'Accept': 'application/json',
           'Content-Type': 'application/json',
-          ...(token && { 'Authorization': token }),
+          'Accept': 'application/json',
         },
       }
     );
@@ -30,10 +27,10 @@ export async function POST(
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to cancel booking',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );

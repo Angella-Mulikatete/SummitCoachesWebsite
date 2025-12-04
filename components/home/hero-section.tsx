@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { motion, Variants } from 'framer-motion'
 import {
   MapPin,
@@ -324,9 +325,12 @@ export function HeroSection() {
                           <p className="text-xs text-slate-500 uppercase mb-1">Fare</p>
                           <p className="font-bold text-lg text-primary">UGX {trip.price.toLocaleString()}</p>
                         </div>
-                        <button className="px-6 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all">
+                        <Link
+                          href={`/booking/${trip.id}`}
+                          className="px-6 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all inline-block"
+                        >
                           Book Now
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>

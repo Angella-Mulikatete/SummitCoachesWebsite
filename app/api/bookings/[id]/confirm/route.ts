@@ -8,13 +8,14 @@ const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://summit.mellonhar
 // POST /api/bookings/[id]/confirm - Confirm a booking
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = request.headers.get('authorization');
 
     const response = await axios.post(
-      `${LARAVEL_API_URL}/bookings/${params.id}/confirm`,
+      `${LARAVEL_API_URL}/bookings/${id}/confirm`,
       {},
       {
         headers: {
@@ -29,10 +30,10 @@ export async function POST(
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: error.response?.data?.message || 'Failed to confirm booking',
-          errors: error.response?.data?.errors 
+          errors: error.response?.data?.errors
         },
         { status: error.response?.status || 500 }
       );

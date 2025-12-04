@@ -122,35 +122,179 @@ export interface SeatMap {
 }
 
 // ==================== BOOKING TYPES ====================
-export interface Passenger {
+export interface PassengerInfo {
+  id?: number
   name: string
   phone: string
-  email: string
-  id_number?: string
-  seat_numbers: string[]
+  email?: string | null
+  passenger_type?: 'adult' | 'child' | 'student' | 'senior'
+  is_walkin?: boolean
+  is_verified?: boolean
+  total_bookings?: number
+  loyalty_points?: number
+  last_booking_date?: string
+  created_at?: string
 }
+
+export interface Luggage {
+  id?: number
+  tracking_code?: string
+  type?: string
+  weight?: number | null
+  charge?: number
+  description?: string | null
+  status?: string
+  is_with_passenger?: boolean
+  sender_name?: string | null
+  sender_contact?: string | null
+  receiver_name?: string | null
+  receiver_contact?: string | null
+}
+
+export interface Parcel {
+  id?: number
+  tracking_code?: string
+  description?: string | null
+  weight?: number | null
+  charge?: number
+  status?: string
+  sender_name: string
+  sender_contact: string
+  receiver_name: string
+  receiver_contact: string
+  pickup_location?: string | null
+  dropoff_location?: string | null
+}
+
+export type BookingType = 'passenger' | 'luggage' | 'parcel' | 'mixed'
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed'
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
+export type PaymentMethod = 'cash' | 'mobile_money' | 'card' | 'bank_transfer'
 
 export interface Booking {
   id: number
-  trip_id: number
-  passenger: Passenger
-  seats: string[]
-  total_amount: number
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
-  booking_reference: string
-  payment_status: 'pending' | 'paid' | 'failed'
+  reference: string
+  booking_type: BookingType
+  status: BookingStatus
+  payment_status: PaymentStatus
+  payment_method?: PaymentMethod | null
+  grand_total: number
+  travel_date: string
   created_at: string
-  updated_at: string
+  updated_at?: string
+  passenger?: PassengerInfo | null
   trip?: Trip
+  seat?: Seat | null
+  ticket?: {
+    seat_number: string
+    amount_paid: number
+  } | null
+  luggages?: Luggage[]
+  parcels?: Parcel[]
 }
 
 export interface CreateBookingPayload {
-  trip_id: number | string
-  passenger_name: string
-  passenger_phone: string
-  passenger_email: string
-  passenger_id_number?: string
-  seat_numbers: string[]
+  trip_id: number
+  booking_type: BookingType
+  payment_status: PaymentStatus
+  payment_method?: PaymentMethod
+  seat_id?: number
+  fare_id?: number
+  discount_id?: number
+  promo_code?: string
+
+  // Passenger details
+  passenger_id?: number
+  passenger_name?: string
+  passenger_phone?: string
+  passenger_email?: string
+  passenger_type?: 'adult' | 'child' | 'student' | 'senior'
+
+  // Luggage details
+  luggage_type_id?: number
+  luggage_count?: number
+  luggage_weight?: number
+  luggage_description?: string
+  luggage_charge?: number
+
+  // Parcel details
+  parcel_type_id?: number
+  parcel_count?: number
+  parcel_weight?: number
+  parcel_description?: string
+  parcel_charge?: number
+
+  // Sender/Receiver (for luggage/parcel)
+  sender_name?: string
+  sender_contact?: string
+  sender_email?: string
+  receiver_name?: string
+  receiver_contact?: string
+  receiver_email?: string
+  pickup_location?: string
+  dropoff_location?: string
+
+  // Group booking
+  is_group_booking?: boolean
+  group_size?: number
+  group_passengers?: Array<{
+    name: string
+    phone?: string
+    email?: string
+    passenger_type?: 'adult' | 'child' | 'student' | 'senior'
+  }>
+}
+
+export interface BookingSummary {
+  total_bookings: number
+  total_revenue: number
+  paid_bookings?: number
+  pending_bookings?: number
+  cancelled_bookings?: number
+  today?: {
+    bookings: number
+    revenue: number
+    pending?: number
+  }
+  yesterday?: {
+    bookings: number
+    revenue: number
+  }
+  this_week?: {
+    bookings: number
+    revenue: number
+  }
+  this_month?: {
+    bookings: number
+    revenue: number
+  }
+  upcoming_trips?: number
+  completed_trips?: number
+  cancelled_trips?: number
+  daily_average?: {
+    bookings: number
+    revenue: number
+  }
+}
+
+export interface PromoCode {
+  id: number
+  code: string
+  description?: string | null
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  formatted_value?: string
+  valid_from: string
+  valid_to: string | null
+  max_uses?: number | null
+  used_count?: number
+  remaining_uses?: number
+  is_public: boolean
+  is_active: boolean
+  min_booking_amount?: number | null
+  max_discount_amount?: number | null
+  requires_insurance?: boolean
+  insurance_percentage?: number | null
 }
 
 // ==================== PAYMENT TYPES ====================

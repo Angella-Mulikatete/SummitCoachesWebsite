@@ -1,22 +1,15 @@
-// src/app/api/routes/[id]/route.ts
-
+// app/api/bookings/summary/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
 const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://admin.summitcoachesug.com/api/v1';
 
-// GET /api/routes/[id] - Get a single route by ID
-export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
+// GET /api/bookings/summary - Get booking summary statistics
+export async function GET(request: NextRequest) {
     try {
-        const { id } = await params;
-
-        const response = await axios.get(`${LARAVEL_API_URL}/routes/${id}`, {
+        const response = await axios.get(`${LARAVEL_API_URL}/bookings/summary`, {
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json',
             },
         });
 
@@ -24,10 +17,9 @@ export async function GET(
     } catch (error) {
         if (axios.isAxiosError(error)) {
             return NextResponse.json(
-                {
+                error.response?.data || {
                     success: false,
-                    message: error.response?.data?.message || 'Failed to fetch route',
-                    errors: error.response?.data?.errors
+                    message: 'Failed to fetch booking summary',
                 },
                 { status: error.response?.status || 500 }
             );

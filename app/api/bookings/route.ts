@@ -50,28 +50,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate required fields
-    const { trip_id, passenger_name, passenger_phone, passenger_email, seat_numbers } = body;
-
-    if (!trip_id || !passenger_name || !passenger_phone || !passenger_email || !seat_numbers) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Missing required fields',
-          errors: {
-            trip_id: !trip_id ? ['Trip ID is required'] : [],
-            passenger_name: !passenger_name ? ['Passenger name is required'] : [],
-            passenger_phone: !passenger_phone ? ['Phone number is required'] : [],
-            passenger_email: !passenger_email ? ['Email is required'] : [],
-            seat_numbers: !seat_numbers ? ['Seat numbers are required'] : [],
-          }
-        },
-        { status: 422 }
-      );
-    }
+    console.log('Creating booking:', body);
 
     const response = await axios.post(
-      `${LARAVEL_API_URL}/bookings`,
+      `${LARAVEL_API_URL}/bookings/create`,
       body,
       {
         headers: {
@@ -81,19 +63,22 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    return NextResponse.json(response.data, { status: 201 });
+    console.log('Booking created:', response.data);
+
+    return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
     if (axios.isAxiosError(error)) {
+      console.error('Booking creation error:', error.response?.data);
       return NextResponse.json(
-        {
+        error.response?.data || {
           success: false,
-          message: error.response?.data?.message || 'Failed to create booking',
-          errors: error.response?.data?.errors
+          message: 'Failed to create booking',
         },
         { status: error.response?.status || 500 }
       );
     }
 
+    console.error('Unexpected error creating booking:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
