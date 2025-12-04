@@ -1,8 +1,6 @@
 "use client"
 
 import { use, useRef } from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { BookingReceipt } from "@/components/booking/booking-receipt"
 import { Button } from "@/components/ui/button"
 import { Download, Printer, Home, Mail } from "lucide-react"
@@ -14,13 +12,13 @@ export default function ConfirmationPage({ params }: { params: Promise<{ booking
   const { bookingId } = use(params)
   const receiptRef = useRef<HTMLDivElement>(null)
 
-  const handlePrint = useReactToPrint({
-    content: () => receiptRef.current,
-  })
+  // const handlePrint = useReactToPrint({
+  //   content: () => receiptRef.current,
+  // })
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+
       <main className="flex-1 bg-muted/30 py-8">
         <div className="container mx-auto px-4">
           {/* Success Message */}
@@ -49,7 +47,9 @@ export default function ConfirmationPage({ params }: { params: Promise<{ booking
             transition={{ duration: 0.5, delay: 0.2 }}
             className="no-print mb-6 flex flex-wrap justify-center gap-4"
           >
-            <Button onClick={handlePrint} size="lg">
+            <Button 
+              // onClick={handlePrint} 
+              size="lg">
               <Printer className="mr-2 h-5 w-5" />
               Print Receipt
             </Button>
@@ -133,7 +133,7 @@ export default function ConfirmationPage({ params }: { params: Promise<{ booking
           </div>
         </div>
       </main>
-      <Footer />
+
     </div>
   )
 }

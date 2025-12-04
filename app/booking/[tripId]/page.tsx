@@ -1,8 +1,6 @@
 "use client"
 
 import { use } from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { BookingForm } from "@/components/booking/booking-form"
 import { BookingReview } from "@/components/booking/booking-review"
 
@@ -11,7 +9,7 @@ export default function BookingPage({ params }: { params: Promise<{ tripId: stri
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+
       <main className="flex-1 bg-muted/30 py-8">
         <div className="container mx-auto px-4">
           <div className="mb-6">
@@ -30,7 +28,7 @@ export default function BookingPage({ params }: { params: Promise<{ tripId: stri
           </div>
         </div>
       </main>
-      <Footer />
+      
     </div>
   )
 }

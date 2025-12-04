@@ -1,10 +1,8 @@
 "use client"
 
-import useSWR from "swr"
 import { Badge } from "@/components/ui/badge"
-import { Clock, MapPin, Calendar } from "lucide-react"
-import type { Trip } from "@/lib/types"
-import { API_ENDPOINTS } from "@/lib/api"
+import { Clock, MapPin, Calendar, Bus } from "lucide-react"
+import { useTrip } from "@/lib/hooks"
 import { format } from "date-fns"
 
 interface TripDetailsProps {
@@ -12,7 +10,7 @@ interface TripDetailsProps {
 }
 
 export function TripDetails({ tripId }: TripDetailsProps) {
-  const { data: trip, isLoading } = useSWR<Trip>(API_ENDPOINTS.tripDetails(tripId))
+  const { trip, isLoading } = useTrip(tripId)
 
   if (isLoading) {
     return (
@@ -28,21 +26,32 @@ export function TripDetails({ tripId }: TripDetailsProps) {
 
   if (!trip) return null
 
-  const departureTime = new Date(trip.departureTime)
-  const arrivalTime = new Date(trip.arrivalTime)
+  // Helper to format date safely
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "N/A"
+    try {
+      const date = new Date(dateStr)
+      if (!isNaN(date.getTime())) return format(date, "MMM dd, yyyy")
+      return dateStr
+    } catch (e) {
+      return dateStr
+    }
+  }
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h2 className="mb-2 text-2xl font-bold text-secondary">
-            {trip.route.origin} → {trip.route.destination}
+            {trip.route?.origin || trip.origin} → {trip.route?.destination || trip.destination}
           </h2>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="bg-primary/10 text-primary">
-              {trip.bus.type}
+              {trip.bus?.type || trip.bus_type || "Standard"}
             </Badge>
-            <Badge variant="outline">{trip.bus.plateNo}</Badge>
+            {trip.bus?.registrationNumber && (
+              <Badge variant="outline">{trip.bus.registrationNumber}</Badge>
+            )}
             <Badge variant="outline" className="capitalize">
               {trip.status}
             </Badge>
@@ -55,7 +64,7 @@ export function TripDetails({ tripId }: TripDetailsProps) {
           <Calendar className="h-8 w-8 text-primary" />
           <div>
             <p className="text-xs text-muted-foreground">Date</p>
-            <p className="font-semibold text-secondary">{format(departureTime, "MMM dd, yyyy")}</p>
+            <p className="font-semibold text-secondary">{formatDate(trip.departureDate)}</p>
           </div>
         </div>
 
@@ -63,7 +72,7 @@ export function TripDetails({ tripId }: TripDetailsProps) {
           <Clock className="h-8 w-8 text-primary" />
           <div>
             <p className="text-xs text-muted-foreground">Departure</p>
-            <p className="font-semibold text-secondary">{format(departureTime, "h:mm a")}</p>
+            <p className="font-semibold text-secondary">{trip.departureTime || "N/A"}</p>
           </div>
         </div>
 
@@ -71,32 +80,18 @@ export function TripDetails({ tripId }: TripDetailsProps) {
           <Clock className="h-8 w-8 text-primary" />
           <div>
             <p className="text-xs text-muted-foreground">Arrival</p>
-            <p className="font-semibold text-secondary">{format(arrivalTime, "h:mm a")}</p>
+            <p className="font-semibold text-secondary">{trip.arrivalTime || "N/A"}</p>
           </div>
         </div>
 
         <div className="flex items-center space-x-3 rounded-lg bg-muted/50 p-4">
-          <MapPin className="h-8 w-8 text-primary" />
+          <Bus className="h-8 w-8 text-primary" />
           <div>
-            <p className="text-xs text-muted-foreground">Distance</p>
-            <p className="font-semibold text-secondary">{trip.route.distanceKm} km</p>
+            <p className="text-xs text-muted-foreground">Bus</p>
+            <p className="font-semibold text-secondary">{trip.bus?.registrationNumber || "N/A"}</p>
           </div>
         </div>
       </div>
-
-      {trip.route.stops && trip.route.stops.length > 0 && (
-        <div className="mt-6 border-t border-border pt-6">
-          <h3 className="mb-3 font-semibold text-secondary">Route Stops</h3>
-          <div className="flex flex-wrap gap-2">
-            {trip.route.stops.map((stop) => (
-              <div key={stop.id} className="flex items-center space-x-2 rounded-full bg-muted px-3 py-1 text-sm">
-                <MapPin className="h-3 w-3 text-primary" />
-                <span>{stop.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

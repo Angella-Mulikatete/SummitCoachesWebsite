@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { DashboardStats } from "@/components/dashboard/dashboard-stats"
 import { BookingsList } from "@/components/dashboard/bookings-list"
 import { UserProfile } from "@/components/dashboard/user-profile"
@@ -33,7 +31,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+      
       <main className="flex-1 bg-muted/30 py-8">
         <div className="container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -63,7 +61,7 @@ export default function DashboardPage() {
           </motion.div>
         </div>
       </main>
-      <Footer />
+      
     </div>
   )
 }

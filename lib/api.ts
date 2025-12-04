@@ -1,5 +1,5 @@
 // API configuration and helper functions
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
 export const API_ENDPOINTS = {
   // Authentication
@@ -34,7 +34,7 @@ export const API_ENDPOINTS = {
 export async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
 
-  const defaultHeaders = {
+  const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
   }
 
