@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { AnimatedBus } from './animated-bus'
 import { motion, Variants } from 'framer-motion'
 import {
   MapPin,
@@ -67,17 +68,8 @@ export function HeroSection() {
 
   return (
     <section className="relative min-h-[85vh] flex flex-col justify-center pt-20 pb-16 overflow-hidden">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop"
-          alt="Scenic Bus Route"
-          className="w-full h-full object-cover"
-        />
-        {/* Gradient Overlay using your theme colors - fades from Navy to transparent */}
-        <div className="absolute inset-0 bg-secondary/80 mix-blend-multiply" />
-        <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/60 to-transparent" />
-      </div>
+      {/* Animated 3D Bus Background */}
+      <AnimatedBus />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
