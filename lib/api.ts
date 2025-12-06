@@ -1,5 +1,7 @@
 // API configuration and helper functions
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
+// Force use of local API proxy for relative paths to avoid env var confusion
+const API_BASE_URL = "/api"
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://admin.summitcoachesug.com/api/v1"
 
 export const API_ENDPOINTS = {
   // Authentication
@@ -29,10 +31,54 @@ export const API_ENDPOINTS = {
   contactInfo: "/content/contact",
   terms: "/content/terms",
   faqs: "/content/faqs",
+
+  // Seat Layouts (Backend API)
+  seatLayouts: `${BACKEND_API_URL}/seat-layouts`,
+  seatLayout: (id: string | number) => `${BACKEND_API_URL}/seat-layouts/${id}`,
+
+  // Luggage Types (Backend API)
+  luggageTypes: `${BACKEND_API_URL}/luggage-types`,
+  luggageType: (id: string | number) => `${BACKEND_API_URL}/luggage-types/${id}`,
+
+  // Discounts (Backend API)
+  discounts: `${BACKEND_API_URL}/discounts`,
+  validateDiscount: `${BACKEND_API_URL}/discounts/validate`,
+  activeDiscounts: `${BACKEND_API_URL}/discounts/active/list`,
+
+  // Seats (Backend API)
+  seats: `${BACKEND_API_URL}/seats`,
+  seat: (id: string | number) => `${BACKEND_API_URL}/seats/${id}`,
+  seatsByBus: (busId: string | number) => `${BACKEND_API_URL}/seats/bus/${busId}`,
+
+  // Buses
+  buses: `${BACKEND_API_URL}/buses`,
+  busDetails: (id: string | number) => `${BACKEND_API_URL}/buses/${id}`,
+  busSeatMap: (id: string | number) => `${BACKEND_API_URL}/buses/${id}/seat-map`,
+  busSeats: (id: string | number) => `${BACKEND_API_URL}/buses/${id}/seats`,
+  busTrips: (id: string | number) => `${BACKEND_API_URL}/buses/${id}/trips`,
+  busStatus: (id: string | number) => `${BACKEND_API_URL}/buses/${id}/status`,
+  searchBuses: `${BACKEND_API_URL}/buses/search`,
+  availableBuses: `${BACKEND_API_URL}/buses/available`,
+
+  // Bus Types
+  busTypes: `${BACKEND_API_URL}/bus-types`,
+  busTypeDetails: (id: string | number) => `${BACKEND_API_URL}/bus-types/${id}`,
+  busTypeBuses: (id: string | number) => `${BACKEND_API_URL}/bus-types/${id}/buses`,
+  busTypesDropdown: `${BACKEND_API_URL}/bus-types/dropdown`,
+
+  // Fares
+  fares: `${BACKEND_API_URL}/fares`,
+  fareDetails: (id: string | number) => `${BACKEND_API_URL}/fares/${id}`,
+  activeFares: `${BACKEND_API_URL}/fares/active`,
+  routeFares: (routeId: string | number) => `${BACKEND_API_URL}/routes/${routeId}/fares`,
+  routeDefaultFare: (routeId: string | number) => `${BACKEND_API_URL}/routes/${routeId}/default-fare`,
+  busTypeFares: (busTypeId: string | number) => `${BACKEND_API_URL}/fares/bus-type/${busTypeId}`,
 }
 
 export async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`
+  // Handle absolute URLs (e.g., from BACKEND_API_URL)
+  const isAbsolute = endpoint.startsWith('http://') || endpoint.startsWith('https://');
+  const url = isAbsolute ? endpoint : `${API_BASE_URL}${endpoint}`
 
   const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -68,16 +114,16 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
 }
 
 export const api = {
-  get: (endpoint: string) => apiRequest(endpoint, { method: "GET" }),
-  post: (endpoint: string, data?: any) =>
-    apiRequest(endpoint, {
+  get: <T = any>(endpoint: string) => apiRequest<T>(endpoint, { method: "GET" }),
+  post: <T = any>(endpoint: string, data?: any) =>
+    apiRequest<T>(endpoint, {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  put: (endpoint: string, data?: any) =>
-    apiRequest(endpoint, {
+  put: <T = any>(endpoint: string, data?: any) =>
+    apiRequest<T>(endpoint, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-  delete: (endpoint: string) => apiRequest(endpoint, { method: "DELETE" }),
+  delete: <T = any>(endpoint: string) => apiRequest<T>(endpoint, { method: "DELETE" }),
 }

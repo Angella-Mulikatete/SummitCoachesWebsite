@@ -14,8 +14,8 @@ interface TripCardProps {
 }
 
 export function TripCard({ trip, passengers }: TripCardProps) {
-  const departureTime = new Date(trip.departureTime)
-  const arrivalTime = new Date(trip.arrivalTime)
+  const departureTime = new Date(trip.departureTime || trip.departure_time)
+  const arrivalTime = new Date(trip.arrivalTime || trip.arrival_time)
 
   const amenityIcons = {
     WiFi: Wifi,
@@ -35,16 +35,18 @@ export function TripCard({ trip, passengers }: TripCardProps) {
           <div>
             <div className="mb-2 flex items-center space-x-2">
               <Badge variant="secondary" className="bg-primary/10 text-primary">
-                {trip.bus.type}
+                {trip.bus?.type || trip.bus_type || "Standard"}
               </Badge>
-              <Badge variant="outline">{trip.bus.plateNo}</Badge>
+              {trip.bus?.plateNo && (
+                <Badge variant="outline">{trip.bus.plateNo}</Badge>
+              )}
             </div>
             <h3 className="text-xl font-semibold text-secondary">
-              {trip.route.origin} → {trip.route.destination}
+              {trip.route?.origin || trip.origin} → {trip.route?.destination || trip.destination}
             </h3>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-primary">UGX {trip.basePrice.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-primary">UGX {(trip.fare || trip.price || 0).toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">per person</p>
           </div>
         </div>
@@ -75,7 +77,7 @@ export function TripCard({ trip, passengers }: TripCardProps) {
           </div>
         </div>
 
-        {trip.bus.amenities && trip.bus.amenities.length > 0 && (
+        {trip.bus?.amenities && trip.bus.amenities.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
             {trip.bus.amenities.map((amenity) => {
               const Icon = amenityIcons[amenity as keyof typeof amenityIcons]
@@ -92,9 +94,9 @@ export function TripCard({ trip, passengers }: TripCardProps) {
         <div className="flex items-center justify-between border-t border-border pt-4">
           <div className="flex items-center space-x-2 text-sm text-secondary-light">
             <MapPin className="h-4 w-4" />
-            <span>{trip.route.distanceKm} km</span>
-            <span>•</span>
-            <span>{trip.route.estimatedDuration}</span>
+            {trip.route?.distanceKm && <span>{trip.route.distanceKm} km</span>}
+            {trip.route?.distanceKm && trip.route?.estimatedDuration && <span>•</span>}
+            {trip.route?.estimatedDuration && <span>{trip.route.estimatedDuration}</span>}
           </div>
 
           <Link href={`/booking/${trip.id}?passengers=${passengers}`}>
@@ -108,3 +110,18 @@ export function TripCard({ trip, passengers }: TripCardProps) {
     </motion.div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

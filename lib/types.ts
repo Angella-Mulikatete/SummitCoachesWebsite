@@ -5,14 +5,17 @@ export interface Route {
   id: string | number
   name: string
   code: string
-  direction: 'departure' | 'arrival'
-  distance_km: number | null
-  duration_minutes: number | null
-  active: string | boolean
-  company_name: string
-  origin: string
   destination: string
-  base_fare: string | number
+  base_fare: number
+  active: boolean
+
+  // Additional fields from RouteController
+  direction?: 'departure' | 'arrival' | 'both'
+  distance_km?: number
+  duration_minutes?: number
+  next_trip_date?: string
+  available_trips_count?: number
+  min_fare?: number
 }
 
 export interface RouteFare {
@@ -26,7 +29,7 @@ export interface RouteFare {
 
 export interface RouteWithFares {
   route: Route
-  fares: RouteFare[]
+  fares: Fare[]
 }
 
 export interface RouteWithTrips {
@@ -55,9 +58,11 @@ export interface Trip {
   date: string
   bus_number: string
   bus_type: string
+  bus_id?: number // Added for bus relationship
+  bus_registration?: string // From RouteController
   fare: number
   available_seats: number
-  total_seats: number
+  total_seats?: number
   status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
   created_at: string
   updated_at: string
@@ -82,13 +87,17 @@ export interface Trip {
   // Nested objects
   bus?: {
     registrationNumber: string
+    plateNo: string
     type: string
     capacity: string
+    amenities?: string[]
   }
   route?: {
     origin: string
     destination: string
     name: string
+    distanceKm: number
+    estimatedDuration: string
   }
 }
 
@@ -106,7 +115,8 @@ export interface SearchTripsParams {
 export interface Seat {
   id: number
   seat_number: string
-  row: number
+  row: number | string // Allow string for row labels
+  row_label?: string // Specific field from controller validation
   column: number
   is_available: boolean
   is_window: boolean
@@ -119,6 +129,42 @@ export interface SeatMap {
   layout: Seat[]
   total_rows: number
   seats_per_row: number
+}
+
+// ==================== SEAT LAYOUT TYPES (FROM API) ====================
+export interface SeatLayoutSeat {
+  id: string // e.g., "A1", "B2"
+  number: number
+  row: string // e.g., "A", "B", "C"
+  column: number
+  type: "seat" | "aisle" | "empty"
+  status: "available" | "booked" | "reserved"
+}
+
+export interface SeatLayoutMap {
+  rows: number
+  columns: number
+  total_seats: number
+  seats: SeatLayoutSeat[][] // Array of rows, each containing seats
+  version: string
+}
+
+export interface SeatLayout {
+  id: number
+  bus_type_id: string | number
+  layout_name: string
+  code: string
+  description: string | null
+  rows: string | number
+  columns: string | number
+  seat_map: SeatLayoutMap
+  total_seats: string | number
+  active: boolean
+  status: string
+  bus_type: {
+    id: number
+    name: string
+  }
 }
 
 // ==================== BOOKING TYPES ====================
@@ -149,6 +195,19 @@ export interface Luggage {
   sender_contact?: string | null
   receiver_name?: string | null
   receiver_contact?: string | null
+}
+
+// ==================== LUGGAGE TYPE (FROM API) ====================
+export interface LuggageType {
+  id: number
+  name: string
+  description: string | null
+  base_charge: number
+  max_weight: number | null
+  charge_per_kg: number | null
+  active: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface Parcel {
@@ -295,6 +354,34 @@ export interface PromoCode {
   max_discount_amount?: number | null
   requires_insurance?: boolean
   insurance_percentage?: number | null
+}
+
+// ==================== DISCOUNT TYPES (FROM API) ====================
+export interface Discount {
+  id: number
+  name: string
+  code: string
+  type: 'percentage' | 'fixed'
+  value: number
+  formatted_value?: string
+  max_uses: number | null
+  used_count: number
+  is_active: boolean
+  start_date: string | null
+  end_date: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DiscountValidationResponse {
+  success: boolean
+  message?: string
+  data?: {
+    discount: Discount
+    discount_amount: number
+    final_amount: number
+  }
+  status_code?: number
 }
 
 // ==================== PAYMENT TYPES ====================
@@ -669,3 +756,67 @@ export interface FilterParams {
 //   content: string
 //   updatedAt: string
 // }
+
+export interface SelectedLuggage {
+  id: string
+  type_id: number
+  type_name: string
+  quantity: number
+  weight: number
+  total_charge: number
+  base_charge: number
+  charge_per_kg: number
+}
+
+// Temporary interface for UI Seat until we fully align with API
+export interface UISeat {
+  seatNo: string
+  row: number
+  column: number
+  price: number
+  class?: string
+}
+
+// ==================== NEW BACKEND TYPES ====================
+
+export interface Bus {
+  id: number
+  registration_number: string
+  capacity: number
+  active: boolean
+  status: string
+  company?: {
+    id: number
+    name: string
+    logo?: string
+  }
+  bus_type?: {
+    id: number
+    name: string
+    description?: string
+  }
+  seat_layout?: {
+    id: number
+    layout_name: string
+    total_seats: number
+    rows: number
+    columns: number
+  }
+}
+
+export interface Fare {
+  id: number
+  route_id: number
+  bus_type_id: number | null
+  base_amount: number
+  fare_type: 'standard' | 'discount' | 'special' | 'holiday' | 'promotional' | 'student' | 'senior' | 'group'
+  is_peak: boolean
+  is_default: boolean
+  active: boolean
+  effective_from: string | null
+  effective_to: string | null
+  bus_type?: {
+    id: number
+    name: string
+  }
+}
