@@ -3,39 +3,72 @@ import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Check } from "lucide-react"
-import type { Trip, Seat } from "@/lib/types"
-import { API_ENDPOINTS } from "@/lib/api"
+import { UISeat, Trip, ApiResponse, Seat } from "@/lib/types"
+import { api, API_ENDPOINTS } from "@/lib/api"
 import { motion } from "framer-motion"
 import { useSeatStore } from "@/lib/stores/seat-store"
+import { useBusSeats, useTripBookedSeats } from "@/hooks/use-seat-layout"
+import { Loader2 } from "lucide-react"
 
 interface SeatSelectionProps {
   tripId: string
 }
 
 export function SeatSelection({ tripId }: SeatSelectionProps) {
-  const { data: trip, isLoading } = useSWR<Trip>(API_ENDPOINTS.tripDetails(tripId))
+  const { data: tripResponse, isLoading: isTripLoading } = useSWR<ApiResponse<Trip>>(
+    API_ENDPOINTS.tripDetails(tripId),
+    api.get
+  )
+
+  const trip = tripResponse?.data
+  const busId = trip?.bus_id ? Number(trip.bus_id) : undefined
+
+  const { seats: busSeats, isLoading: isSeatsLoading, error: seatsError } = useBusSeats(busId)
+  // const { bookedSeats, isLoading: isBookedLoading } = useTripBookedSeats(tripId)
+  const bookedSeats: any[] = []
+  const isBookedLoading = false
   const { selectedSeats, toggleSeat, clearSeats } = useSeatStore()
 
-  if (isLoading) {
+  console.log("Trip ID:", tripId);
+  console.log("Trip Data:", trip);
+  console.log("Bus ID:", busId);
+  console.log("Bus Seats:", busSeats);
+  console.log("Seats Error:", seatsError);
+  console.log("Booked Seats:", bookedSeats);
+  console.log("Is Loading:", { isTripLoading, isSeatsLoading, isBookedLoading });
+
+  if (isTripLoading || isSeatsLoading || isBookedLoading) {
     return (
-      <div className="animate-pulse rounded-2xl bg-white p-6">
-        <div className="mb-4 h-6 w-1/3 rounded bg-muted" />
-        <div className="grid grid-cols-4 gap-2">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="h-12 rounded bg-muted" />
-          ))}
-        </div>
+      <div className="flex h-64 items-center justify-center rounded-2xl bg-white p-6 shadow-sm">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   if (!trip) return null
 
-  const seatMap = trip.seatMap || { rows: 10, columns: 4, seats: [] }
+  // Group seats by row for rendering
+  // The API returns position_y (row) and position_x (column)
+  // We need to group by position_y
+  const seatRows = busSeats.reduce((acc: Seat[][], seat: Seat) => {
+    // position_y is 1-based index (e.g. 1, 2, 3...)
+    // We want to map it to an array index (0-based)
+    const rowIndex = (seat.position_y || 1) - 1;
 
+    if (!acc[rowIndex]) acc[rowIndex] = []
+    acc[rowIndex].push(seat)
+    return acc
+  }, [] as Seat[][]).filter(Boolean)
+
+  // Transform API seat to UI Seat for status checking
   const getSeatStatus = (seat: Seat) => {
-    if (seat.isBooked) return "booked"
-    if (selectedSeats.some((s) => s.seatNo === seat.seatNo)) return "selected"
+    // Check if seat is in bookedSeats list
+    const isBooked = bookedSeats.some((booked: any) =>
+      booked.seat_number === seat.seat_number || booked.id === seat.id
+    ) || seat.status === 'reserved' || seat.status === 'broken' || seat.is_reserved
+
+    if (isBooked) return "booked"
+    if (selectedSeats.some((s) => s.seatNo === seat.seat_number)) return "selected"
     return "available"
   }
 
@@ -48,6 +81,21 @@ export function SeatSelection({ tripId }: SeatSelectionProps) {
       default:
         return "bg-white border-border hover:border-primary hover:bg-primary/5 cursor-pointer"
     }
+  }
+
+  const handleSeatClick = (apiSeat: Seat) => {
+    // Determine seat price based on class or position if needed
+    // For now using trip fare
+    const price = trip.fare || trip.price || 0
+
+    const uiSeat: UISeat = {
+      seatNo: apiSeat.seat_number,
+      row: apiSeat.position_y,
+      column: apiSeat.position_x,
+      price: price,
+      class: "Standard"
+    }
+    toggleSeat(uiSeat)
   }
 
   return (
@@ -80,65 +128,48 @@ export function SeatSelection({ tripId }: SeatSelectionProps) {
       {/* Bus Layout */}
       <div className="overflow-x-auto">
         <div className="inline-block min-w-full">
-          {/* Driver Section */}
-          <div className="mb-4 flex justify-end">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-white">
-              <span className="text-xs font-semibold">Driver</span>
+          {/* Driver Section - Only show if we have seats */}
+          {busSeats.length > 0 && (
+            <div className="mb-8 flex justify-end px-12">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary text-white shadow-md">
+                <span className="text-xs font-semibold">Driver</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Seats Grid */}
-          <div className="space-y-2">
-            {Array.from({ length: seatMap.rows }).map((_, rowIndex) => (
-              <div key={rowIndex} className="flex items-center justify-center gap-2">
-                {/* Left side seats */}
-                <div className="flex gap-2">
-                  {seatMap.seats
-                    .filter((seat) => seat.row === rowIndex && seat.column < 2)
-                    .sort((a, b) => a.column - b.column)
-                    .map((seat) => {
-                      const status = getSeatStatus(seat)
-                      return (
-                        <motion.button
-                          key={seat.seatNo}
-                          whileHover={status === "available" ? { scale: 1.05 } : {}}
-                          whileTap={status === "available" ? { scale: 0.95 } : {}}
-                          onClick={() => status === "available" && toggleSeat(seat)}
-                          disabled={status === "booked"}
-                          className={`flex h-12 w-12 items-center justify-center rounded-lg border-2 text-xs font-semibold transition-all ${getSeatColor(status)}`}
-                        >
-                          {status === "selected" ? <Check className="h-4 w-4" /> : seat.seatNo}
-                        </motion.button>
-                      )
-                    })}
-                </div>
-
-                {/* Aisle */}
-                <div className="w-8" />
-
-                {/* Right side seats */}
-                <div className="flex gap-2">
-                  {seatMap.seats
-                    .filter((seat) => seat.row === rowIndex && seat.column >= 2)
-                    .sort((a, b) => a.column - b.column)
-                    .map((seat) => {
-                      const status = getSeatStatus(seat)
-                      return (
-                        <motion.button
-                          key={seat.seatNo}
-                          whileHover={status === "available" ? { scale: 1.05 } : {}}
-                          whileTap={status === "available" ? { scale: 0.95 } : {}}
-                          onClick={() => status === "available" && toggleSeat(seat)}
-                          disabled={status === "booked"}
-                          className={`flex h-12 w-12 items-center justify-center rounded-lg border-2 text-xs font-semibold transition-all ${getSeatColor(status)}`}
-                        >
-                          {status === "selected" ? <Check className="h-4 w-4" /> : seat.seatNo}
-                        </motion.button>
-                      )
-                    })}
-                </div>
+          <div className="space-y-3 px-4 pb-4">
+            {seatRows.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                No seats configuration found for this bus.
               </div>
-            ))}
+            ) : (
+              seatRows.map((row: any[], rowIndex: number) => (
+                <div key={rowIndex} className="flex items-center justify-center gap-4">
+                  {/* Render row seats */}
+                  {row.sort((a, b) => {
+                    const colA = a.position_x ?? 0;
+                    const colB = b.position_x ?? 0;
+                    return colA - colB;
+                  }).map((seat: Seat) => {
+                    const status = getSeatStatus(seat)
+
+                    return (
+                      <motion.button
+                        key={seat.id}
+                        whileHover={status === "available" ? { scale: 1.05 } : {}}
+                        whileTap={status === "available" ? { scale: 0.95 } : {}}
+                        onClick={() => status === "available" && handleSeatClick(seat)}
+                        disabled={status === "booked"}
+                        className={`relative flex h-12 w-12 items-center justify-center rounded-xl border-2 text-sm font-bold shadow-sm transition-all ${getSeatColor(status)}`}
+                      >
+                        {status === "selected" ? <Check className="h-5 w-5" /> : seat.seat_number}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

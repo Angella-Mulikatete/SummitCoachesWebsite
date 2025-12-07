@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { ArrowRight, Tag, Trash2, Plus } from "lucide-react"
+import { ArrowRight, Tag, Loader2, BookOpen } from "lucide-react"
 import { useSeatStore } from "@/lib/stores/seat-store"
 import { motion, AnimatePresence } from "framer-motion"
 import { useToast } from "@/hooks/use-toast"
+import { LuggageSelector } from "@/components/booking/luggage-selector"
+import { useDiscountValidation } from "@/hooks/use-discount-validation"
 
 interface BookingSummaryProps {
   tripId: string
@@ -18,40 +20,50 @@ interface BookingSummaryProps {
 export function BookingSummary({ tripId }: BookingSummaryProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const { selectedSeats, luggage, addLuggage, removeLuggage, discountCode, setDiscountCode } = useSeatStore()
+  const {
+    selectedSeats,
+    luggage,
+    setLuggage,
+    removeLuggage,
+    discountCode,
+    setDiscountCode,
+    discountAmount,
+    setDiscountAmount
+  } = useSeatStore()
 
-  const [showLuggageForm, setShowLuggageForm] = useState(false)
-  const [luggageForm, setLuggageForm] = useState({ description: "", weight: "" })
+  const { validateDiscount, isValidating, error: discountError, discount: validDiscount } = useDiscountValidation()
 
   const seatsTotal = selectedSeats.reduce((sum, seat) => sum + seat.price, 0)
-  const luggageTotal = luggage.reduce((sum, item) => sum + item.price, 0)
+  const luggageTotal = luggage.reduce((sum, item) => sum + item.total_charge, 0)
   const subtotal = seatsTotal + luggageTotal
-  const discount = 0 // Calculate based on discount code
-  const tax = subtotal * 0.18 // 18% VAT
-  const total = subtotal - discount + tax
+  const tax = subtotal * 0.18 // 18% VAT (or adjust as per requirements)
 
-  const handleAddLuggage = () => {
-    if (!luggageForm.description || !luggageForm.weight) {
+  // Calculate total: (Subtotal - Discount) + Tax? Or (Subtotal + Tax) - Discount?
+  // Assuming discount applies to fare before tax for now
+  const taxableAmount = Math.max(0, subtotal - discountAmount)
+  // const total = taxableAmount + (taxableAmount * 0.18) 
+  // Simplified for now: Subtotal + Tax - Discount
+  const total = Math.max(0, subtotal + tax - discountAmount)
+
+  const handleApplyDiscount = async () => {
+    if (!discountCode) return
+
+    const result = await validateDiscount(discountCode, subtotal)
+    if (result.success && result.data) {
+      setDiscountAmount(result.data.discount_amount)
       toast({
-        title: "Error",
-        description: "Please fill in all luggage details",
+        title: "Discount Applied",
+        description: `You saved UGX ${result.data.discount_amount.toLocaleString()}`,
+        variant: "default",
+      })
+    } else {
+      setDiscountAmount(0)
+      toast({
+        title: "Invalid Code",
+        description: result.message || "This discount code is not valid",
         variant: "destructive",
       })
-      return
     }
-
-    const weight = Number.parseFloat(luggageForm.weight)
-    const price = weight * 1000 // UGX 1000 per kg
-
-    addLuggage({
-      id: Date.now().toString(),
-      description: luggageForm.description,
-      weight,
-      price,
-    })
-
-    setLuggageForm({ description: "", weight: "" })
-    setShowLuggageForm(false)
   }
 
   const handleProceed = () => {
@@ -81,7 +93,7 @@ export function BookingSummary({ tripId }: BookingSummaryProps) {
             {selectedSeats.map((seat) => (
               <div key={seat.seatNo} className="flex items-center justify-between text-sm">
                 <span className="text-secondary">
-                  Seat {seat.seatNo} ({seat.class})
+                  Seat {seat.seatNo}
                 </span>
                 <span className="font-medium text-secondary">UGX {seat.price.toLocaleString()}</span>
               </div>
@@ -92,74 +104,8 @@ export function BookingSummary({ tripId }: BookingSummaryProps) {
 
       <Separator className="my-4" />
 
-      {/* Luggage */}
-      <div className="mb-4">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-medium text-secondary-light">Luggage ({luggage.length})</p>
-          <Button variant="ghost" size="sm" onClick={() => setShowLuggageForm(!showLuggageForm)}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <AnimatePresence>
-          {showLuggageForm && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-3 space-y-2 rounded-lg bg-muted/50 p-3"
-            >
-              <div>
-                <Label htmlFor="luggage-desc" className="text-xs">
-                  Description
-                </Label>
-                <Input
-                  id="luggage-desc"
-                  placeholder="e.g., Large suitcase"
-                  value={luggageForm.description}
-                  onChange={(e) => setLuggageForm({ ...luggageForm, description: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div>
-                <Label htmlFor="luggage-weight" className="text-xs">
-                  Weight (kg)
-                </Label>
-                <Input
-                  id="luggage-weight"
-                  type="number"
-                  placeholder="20"
-                  value={luggageForm.weight}
-                  onChange={(e) => setLuggageForm({ ...luggageForm, weight: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <Button size="sm" onClick={handleAddLuggage} className="w-full">
-                Add Luggage
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {luggage.length > 0 && (
-          <div className="space-y-2">
-            {luggage.map((item) => (
-              <div key={item.id} className="flex items-center justify-between text-sm">
-                <div className="flex-1">
-                  <p className="text-secondary">{item.description}</p>
-                  <p className="text-xs text-muted-foreground">{item.weight} kg</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium text-secondary">UGX {item.price.toLocaleString()}</span>
-                  <Button variant="ghost" size="sm" onClick={() => removeLuggage(item.id)}>
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Luggage Section */}
+      <LuggageSelector luggage={luggage} onLuggageChange={setLuggage} />
 
       <Separator className="my-4" />
 
@@ -175,11 +121,22 @@ export function BookingSummary({ tripId }: BookingSummaryProps) {
             value={discountCode}
             onChange={(e) => setDiscountCode(e.target.value)}
             className="h-9"
+            disabled={isValidating}
           />
-          <Button variant="outline" size="sm">
-            <Tag className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleApplyDiscount}
+            disabled={!discountCode || isValidating}
+          >
+            {isValidating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Tag className="h-4 w-4" />}
           </Button>
         </div>
+        {discountAmount > 0 && (
+          <p className="mt-2 text-xs text-green-600 font-medium">
+            Discount applied!
+          </p>
+        )}
       </div>
 
       <Separator className="my-4" />
@@ -187,23 +144,25 @@ export function BookingSummary({ tripId }: BookingSummaryProps) {
       {/* Price Breakdown */}
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
-          <span className="text-secondary-light">Seats</span>
+          <span className="text-secondary-light">Seats Subtotal</span>
           <span className="font-medium text-secondary">UGX {seatsTotal.toLocaleString()}</span>
         </div>
         {luggageTotal > 0 && (
           <div className="flex justify-between">
-            <span className="text-secondary-light">Luggage</span>
+            <span className="text-secondary-light">Luggage Subtotal</span>
             <span className="font-medium text-secondary">UGX {luggageTotal.toLocaleString()}</span>
           </div>
         )}
-        {discount > 0 && (
-          <div className="flex justify-between text-success">
+
+        {discountAmount > 0 && (
+          <div className="flex justify-between text-success font-medium">
             <span>Discount</span>
-            <span>-UGX {discount.toLocaleString()}</span>
+            <span>-UGX {discountAmount.toLocaleString()}</span>
           </div>
         )}
+
         <div className="flex justify-between">
-          <span className="text-secondary-light">Tax (18%)</span>
+          <span className="text-secondary-light">VAT (18%)</span>
           <span className="font-medium text-secondary">UGX {tax.toLocaleString()}</span>
         </div>
       </div>
@@ -226,3 +185,4 @@ export function BookingSummary({ tripId }: BookingSummaryProps) {
     </div>
   )
 }
+

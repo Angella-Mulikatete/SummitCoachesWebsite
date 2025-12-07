@@ -53,6 +53,15 @@ const nextConfig = {
 
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
+
+  async rewrites() {
+    return [
+      {
+        source: '/api/proxy/:path*',
+        destination: 'https://admin.summitcoachesug.com/api/v1/:path*',
+      },
+    ]
+  },
 };
 
 export default nextConfig;
