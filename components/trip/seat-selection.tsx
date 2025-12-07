@@ -3,7 +3,7 @@ import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Check } from "lucide-react"
-import { UISeat, Trip, ApiResponse } from "@/lib/types"
+import { UISeat, Trip, ApiResponse, Seat } from "@/lib/types"
 import { api, API_ENDPOINTS } from "@/lib/api"
 import { motion } from "framer-motion"
 import { useSeatStore } from "@/lib/stores/seat-store"
@@ -23,7 +23,7 @@ export function SeatSelection({ tripId }: SeatSelectionProps) {
   const trip = tripResponse?.data
   const busId = trip?.bus_id ? Number(trip.bus_id) : undefined
 
-  const { seats: busSeats, isLoading: isSeatsLoading } = useBusSeats(busId)
+  const { seats: busSeats, isLoading: isSeatsLoading, error: seatsError } = useBusSeats(busId)
   // const { bookedSeats, isLoading: isBookedLoading } = useTripBookedSeats(tripId)
   const bookedSeats: any[] = []
   const isBookedLoading = false
@@ -33,6 +33,7 @@ export function SeatSelection({ tripId }: SeatSelectionProps) {
   console.log("Trip Data:", trip);
   console.log("Bus ID:", busId);
   console.log("Bus Seats:", busSeats);
+  console.log("Seats Error:", seatsError);
   console.log("Booked Seats:", bookedSeats);
   console.log("Is Loading:", { isTripLoading, isSeatsLoading, isBookedLoading });
 
@@ -47,41 +48,24 @@ export function SeatSelection({ tripId }: SeatSelectionProps) {
   if (!trip) return null
 
   // Group seats by row for rendering
-  const seatRows = busSeats.reduce((acc: any[], seat: any) => {
-    // Determine row index from multiple possible properties
-    // 1. If row is string (A, B...), convert to index
-    // 2. If row is number, use it
-    // 3. Fallback to position_y (from new API response)
-    // 4. Fallback to row_label parsing
-    let rowIndex = 0;
-
-    if (typeof seat.row === 'string') {
-      rowIndex = seat.row.charCodeAt(0) - 65;
-    } else if (typeof seat.row === 'number') {
-      rowIndex = seat.row;
-    } else if (typeof seat.position_y === 'number') {
-      // position_y seems to be 1-based index (e.g. 2, 3)
-      rowIndex = seat.position_y - 1;
-    } else if (seat.row_label) {
-      // Try to parse row label or convert char
-      const parsed = parseInt(seat.row_label);
-      rowIndex = isNaN(parsed) ? (seat.row_label.charCodeAt(0) - 65) : parsed - 1;
-    }
-
-    // Ensure valid index
-    rowIndex = Math.max(0, rowIndex);
+  // The API returns position_y (row) and position_x (column)
+  // We need to group by position_y
+  const seatRows = busSeats.reduce((acc: Seat[][], seat: Seat) => {
+    // position_y is 1-based index (e.g. 1, 2, 3...)
+    // We want to map it to an array index (0-based)
+    const rowIndex = (seat.position_y || 1) - 1;
 
     if (!acc[rowIndex]) acc[rowIndex] = []
     acc[rowIndex].push(seat)
     return acc
-  }, []).filter(Boolean)
+  }, [] as Seat[][]).filter(Boolean)
 
   // Transform API seat to UI Seat for status checking
-  const getSeatStatus = (seat: any) => {
+  const getSeatStatus = (seat: Seat) => {
     // Check if seat is in bookedSeats list
     const isBooked = bookedSeats.some((booked: any) =>
       booked.seat_number === seat.seat_number || booked.id === seat.id
-    ) || seat.status === 'reserved' || seat.status === 'broken'
+    ) || seat.status === 'reserved' || seat.status === 'broken' || seat.is_reserved
 
     if (isBooked) return "booked"
     if (selectedSeats.some((s) => s.seatNo === seat.seat_number)) return "selected"
@@ -99,15 +83,15 @@ export function SeatSelection({ tripId }: SeatSelectionProps) {
     }
   }
 
-  const handleSeatClick = (apiSeat: any) => {
+  const handleSeatClick = (apiSeat: Seat) => {
     // Determine seat price based on class or position if needed
     // For now using trip fare
     const price = trip.fare || trip.price || 0
 
     const uiSeat: UISeat = {
       seatNo: apiSeat.seat_number,
-      row: typeof apiSeat.row === 'string' ? apiSeat.row.charCodeAt(0) - 65 : apiSeat.row,
-      column: apiSeat.column,
+      row: apiSeat.position_y,
+      column: apiSeat.position_x,
       price: price,
       class: "Standard"
     }
@@ -164,10 +148,10 @@ export function SeatSelection({ tripId }: SeatSelectionProps) {
                 <div key={rowIndex} className="flex items-center justify-center gap-4">
                   {/* Render row seats */}
                   {row.sort((a, b) => {
-                    const colA = a.position_x ?? a.column ?? 0;
-                    const colB = b.position_x ?? b.column ?? 0;
+                    const colA = a.position_x ?? 0;
+                    const colB = b.position_x ?? 0;
                     return colA - colB;
-                  }).map((seat: any) => {
+                  }).map((seat: Seat) => {
                     const status = getSeatStatus(seat)
 
                     return (

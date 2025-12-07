@@ -24,7 +24,7 @@ export default function SeatSelector({
     // Group seats by row
     const seatsByRow = seats.reduce((acc, seat) => {
         // Use row number as label or convert to letter if needed
-        const rowLabel = `Row ${seat.row}`
+        const rowLabel = seat.row_label && seat.row_label.includes('Row') ? seat.row_label : `Row ${seat.row_label}`
         if (!acc[rowLabel]) {
             acc[rowLabel] = []
         }
@@ -41,7 +41,7 @@ export default function SeatSelector({
 
     const getSeatStatus = (seat: Seat) => {
         if (selectedSeats.includes(seat.id)) return 'selected'
-        if (!seat.is_available) return 'reserved'
+        if (seat.status !== 'available') return 'reserved'
         return 'available'
     }
 
@@ -136,7 +136,7 @@ export default function SeatSelector({
                 <div className="space-y-3">
                     {sortedRows.map((rowLabel) => {
                         const rowSeats = seatsByRow[rowLabel].sort((a, b) =>
-                            (a.column || 0) - (b.column || 0)
+                            (a.position_x || 0) - (b.position_x || 0)
                         )
 
                         return (

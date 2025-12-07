@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
-const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://admin.summitcoachesug.com/api/v1';
+const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://admin.summitcoachesug.com/api/v1';
 
 // GET /api/seats/trip/[id] - Get seats for a specific trip
 export async function GET(

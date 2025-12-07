@@ -40,8 +40,9 @@ export interface RouteWithTrips {
 export interface RouteSearchParams {
   company_id?: number
   active?: boolean
+  has_trips?: boolean
   search?: string
-  date_filter?: 'today' | 'tomorrow' | 'week'
+  date_filter?: string
   min_seats?: number
   origin?: string
   destination?: string
@@ -84,6 +85,9 @@ export interface Trip {
   departureTime?: string
   arrivalTime?: string
 
+  // ✅ ADDED: Route relationship fields
+  route_id?: number | string // Route ID from API
+
   // Nested objects
   bus?: {
     registrationNumber: string
@@ -93,6 +97,7 @@ export interface Trip {
     amenities?: string[]
   }
   route?: {
+    id?: number | string // ✅ ADDED: Route ID
     origin: string
     destination: string
     name: string
@@ -111,17 +116,50 @@ export interface SearchTripsParams {
   limit?: number
 }
 
+export interface TripSearchParams {
+  // Location filters
+  origin?: string
+  destination?: string
+  route_id?: string | number
+
+  // Date filters
+  date?: string // Specific date (YYYY-MM-DD)
+  trip_date?: string // Alias for date
+
+  // ✅ NEW: Control whether to show only upcoming trips
+  upcoming_only?: boolean // Default: true
+
+  // Pagination
+  page?: number
+  per_page?: number
+
+  // Other filters
+  featured?: boolean
+  limit?: number
+  min_seats?: number
+}
+
+
+
+
 // ==================== SEAT TYPES ====================
 export interface Seat {
   id: number
+  bus_id: number
   seat_number: string
-  row: number | string // Allow string for row labels
-  row_label?: string // Specific field from controller validation
-  column: number
-  is_available: boolean
+  row_label: string
+  position_x: number
+  position_y: number
   is_window: boolean
-  is_aisle: boolean
-  price_modifier?: number
+  is_reserved: boolean
+  active: boolean
+  status: 'available' | 'booked' | 'reserved' | 'maintenance' | 'broken'
+  creator?: any
+  bus?: {
+    id: number
+    registration_number: string
+    [key: string]: any
+  }
 }
 
 export interface SeatMap {
@@ -229,6 +267,7 @@ export type BookingType = 'passenger' | 'luggage' | 'parcel' | 'mixed'
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed'
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 export type PaymentMethod = 'cash' | 'mobile_money' | 'card' | 'bank_transfer'
+export type PassengerType = 'adult' | 'child' | 'infant' | 'student' | 'senior'
 
 export interface Booking {
   id: number
@@ -252,38 +291,90 @@ export interface Booking {
   parcels?: Parcel[]
 }
 
+// export interface CreateBookingPayload {
+//   trip_id: number
+//   booking_type: BookingType
+//   payment_status: PaymentStatus
+//   payment_method?: PaymentMethod
+//   seat_id?: number
+//   fare_id?: number
+//   discount_id?: number
+//   promo_code?: string
+
+//   // Passenger details
+//   passenger_id?: number
+//   passenger_name?: string
+//   passenger_phone?: string
+//   passenger_email?: string
+//   passenger_type?: 'adult' | 'child' | 'student' | 'senior'
+
+//   // Luggage details
+//   luggage_type_id?: number
+//   luggage_count?: number
+//   luggage_weight?: number
+//   luggage_description?: string
+//   luggage_charge?: number
+
+//   // Parcel details
+//   parcel_type_id?: number
+//   parcel_count?: number
+//   parcel_weight?: number
+//   parcel_description?: string
+//   parcel_charge?: number
+
+//   // Sender/Receiver (for luggage/parcel)
+//   sender_name?: string
+//   sender_contact?: string
+//   sender_email?: string
+//   receiver_name?: string
+//   receiver_contact?: string
+//   receiver_email?: string
+//   pickup_location?: string
+//   dropoff_location?: string
+
+//   // Group booking
+//   is_group_booking?: boolean
+//   group_size?: number
+//   group_passengers?: Array<{
+//     name: string
+//     phone?: string
+//     email?: string
+//     passenger_type?: 'adult' | 'child' | 'student' | 'senior'
+//   }>
+// }
+
 export interface CreateBookingPayload {
+  // Required fields
   trip_id: number
   booking_type: BookingType
   payment_status: PaymentStatus
-  payment_method?: PaymentMethod
+  payment_method: 'cash' | 'mobile_money' | 'card' | 'bank_transfer'
+  
+  // Seat booking (required for passenger bookings)
   seat_id?: number
-  fare_id?: number
+  
+  // Discount & Promo
   discount_id?: number
   promo_code?: string
-
-  // Passenger details
-  passenger_id?: number
+  
+  // Passenger details (required for passenger bookings)
+  // passenger_id?: number
   passenger_name?: string
   passenger_phone?: string
   passenger_email?: string
-  passenger_type?: 'adult' | 'child' | 'student' | 'senior'
-
-  // Luggage details
+  passenger_type?: PassengerType
+  
+  // Luggage details (optional for passenger, required for luggage bookings)
   luggage_type_id?: number
   luggage_count?: number
   luggage_weight?: number
   luggage_description?: string
-  luggage_charge?: number
-
-  // Parcel details
+  
+  // Parcel details (required for parcel bookings)
   parcel_type_id?: number
   parcel_count?: number
   parcel_weight?: number
   parcel_description?: string
-  parcel_charge?: number
-
-  // Sender/Receiver (for luggage/parcel)
   sender_name?: string
   sender_contact?: string
   sender_email?: string
@@ -292,16 +383,17 @@ export interface CreateBookingPayload {
   receiver_email?: string
   pickup_location?: string
   dropoff_location?: string
-
+  
   // Group booking
   is_group_booking?: boolean
-  group_size?: number
-  group_passengers?: Array<{
-    name: string
-    phone?: string
-    email?: string
-    passenger_type?: 'adult' | 'child' | 'student' | 'senior'
-  }>
+  group_passengers?: GroupPassenger[]
+}
+
+export interface GroupPassenger {
+  name: string
+  phone: string
+  email?: string
+  passenger_type: PassengerType
 }
 
 export interface BookingSummary {
@@ -333,6 +425,50 @@ export interface BookingSummary {
   daily_average?: {
     bookings: number
     revenue: number
+  }
+}
+
+export interface BookingResponse {
+  success: boolean
+  message: string
+  data: {
+    id: number
+    reference: string
+    booking_type: BookingType
+    status: 'confirmed' | 'pending' | 'cancelled'
+    grand_total: number
+    travel_date: string
+    passenger?: {
+      id: number
+      name: string
+      phone: string
+      email?: string
+    }
+    trip: {
+      id: number
+      departure_time: string
+      route: {
+        name: string
+        origin: string
+        destination: string
+      }
+    }
+    ticket?: {
+      seat_number: string
+      amount_paid: number
+    }
+    luggages?: Array<{
+      tracking_code: string
+      weight: number
+      charge: number
+    }>
+    parcels?: Array<{
+      tracking_code: string
+      weight: number
+      charge: number
+      sender_name: string
+      receiver_name: string
+    }>
   }
 }
 
@@ -520,6 +656,7 @@ export interface AuthResponse {
   user: User
   token: string
   expires_at: string
+  message?: string
 }
 
 // ==================== NOTIFICATION TYPES ====================
@@ -797,10 +934,66 @@ export interface Bus {
   }
   seat_layout?: {
     id: number
-    layout_name: string
     total_seats: number
     rows: number
     columns: number
+  }
+}
+
+// ==================== NEW AUTH TYPES ====================
+export interface RegisterPayload {
+  name: string
+  email?: string
+  phone: string
+  password?: string
+  password_confirmation?: string
+  gender?: string
+  address?: string
+}
+
+export interface LoginPayload {
+  login: string
+  password?: string
+}
+
+// ==================== PARCEL TYPES ====================
+export interface ParcelType {
+  id: number
+  name: string
+  description?: string
+  min_weight: number
+  max_weight: number
+  base_charge: number
+  charge_per_kg: number
+  requires_insurance: boolean
+  insurance_percentage?: number
+  active: boolean
+}
+
+export interface CalculateParcelChargesPayload {
+  parcel_type_id: number
+  weight: number
+  declared_value?: number // for insurance
+}
+
+export interface CalculateParcelChargesResponse {
+  success: boolean
+  data: {
+    base_charge: number
+    weight_charge: number
+    insurance_charge: number
+    total_charge: number
+  }
+}
+
+// ==================== PROMO TYPES ====================
+export interface PromoUsageResponse {
+  success: boolean
+  data: {
+    count: number
+    limit: number
+    remaining: number
+    can_use: boolean
   }
 }
 

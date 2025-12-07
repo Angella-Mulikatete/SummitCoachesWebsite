@@ -2,16 +2,14 @@
 
 import { use } from "react"
 
-import { TripDetails } from "@/components/trip/trip-details"
-import { SeatSelection } from "@/components/trip/seat-selection"
-import { BookingSummary } from "@/components/trip/booking-summary"
+import BookingFlow from "@/components/booking/booking-flow"
 
 export default function TripPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
 
   return (
     <div className="flex min-h-screen flex-col">
-   
+
       <main className="flex-1 bg-muted/30 py-8">
         <div className="container mx-auto px-4">
           <div className="mb-6">
@@ -19,19 +17,12 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
             <p className="text-secondary-light">Choose your preferred seats and complete your booking</p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
-            <div className="space-y-6">
-              <TripDetails tripId={id} />
-              <SeatSelection tripId={id} />
-            </div>
-
-            <aside className="h-fit">
-              <BookingSummary tripId={id} />
-            </aside>
+          <div className="w-full">
+            <BookingFlow tripId={id} />
           </div>
         </div>
       </main>
-   
+
     </div>
   )
 }

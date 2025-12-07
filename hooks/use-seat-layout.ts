@@ -1,37 +1,16 @@
 import useSWR from "swr"
-import { SeatLayout } from "@/lib/types"
+import { SeatLayout, Seat } from "@/lib/types"
 import { API_ENDPOINTS, api } from "@/lib/api"
 
-
-export function useSeatLayout(layoutId: number | null) {
-    const { data, error, isLoading } = useSWR<{ success: boolean; data: SeatLayout }>(
-        layoutId ? API_ENDPOINTS.seatLayout(layoutId) : null
-    )
-
-    return {
-        seatLayout: data?.data,
-        isLoading,
-        error,
-    }
-}
-
-export function useSeatLayouts() {
-    const { data, error, isLoading } = useSWR<{ success: boolean; data: SeatLayout[] }>(
-        API_ENDPOINTS.seatLayouts
-    )
-
-    return {
-        seatLayouts: data?.data || [],
-        isLoading,
-        error,
-    }
-}
-
 export function useBusSeats(busId?: number) {
-    const { data, error, isLoading } = useSWR<{ success: boolean; data: any[] }>(
+    const { data, error, isLoading } = useSWR<{ success: boolean; data: Seat[] }>(
         busId ? API_ENDPOINTS.seatsByBus(busId) : null,
-        (url: string) => api.get<{ success: boolean; data: any[] }>(url)
+        (url: string) => api.get<{ success: boolean; data: Seat[] }>(url)
     )
+
+    console.log("useBusSeats Hook - BusID:", busId);
+    console.log("useBusSeats Hook - Data:", data);
+    console.log("useBusSeats Hook - Error:", error);
 
     return {
         seats: data?.data || [],

@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
-const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'http://admin.summitcoachesug.com/api/v1';
+const LARAVEL_API_URL = process.env.LARAVEL_API_URL || 'https://admin.summitcoachesug.com/api/v1';
 
 // GET /api/routes/[id]/trips - Get trips for a route
 export async function GET(
@@ -12,12 +12,13 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
-        const searchParams = request.nextUrl.searchParams;
-
         // Build query parameters for filtering trips
+        const searchParams = request.nextUrl.searchParams;
+        const hasDateParams = searchParams.has('date') || searchParams.has('date_filter');
+
         const queryParams = {
             date: searchParams.get('date'),
-            date_filter: searchParams.get('date_filter'),
+            date_filter: searchParams.get('date_filter') || (!hasDateParams ? 'today' : undefined),
             min_seats: searchParams.get('min_seats'),
         };
 
