@@ -1,39 +1,33 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import useSWR from "swr"
-import { TripCard } from "./trip-card"
+import { TripCard } from "@/app/trips/(_components)/trip-card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Bus } from "lucide-react"
-import type { Trip } from "@/lib/types"
-import { API_ENDPOINTS } from "@/lib/api"
+import { useTripSearch } from "@/lib/hooks"
 
 export function TripList() {
   const searchParams = useSearchParams()
   const origin = searchParams.get("origin")
   const destination = searchParams.get("destination")
   const date = searchParams.get("date")
-  const passengers = searchParams.get("passengers") || "1"
 
-  // Build query string for API
-  const queryString = new URLSearchParams({
-    origin: origin || "",
-    destination: destination || "",
-    date: date || "",
-    passengers,
-  }).toString()
-
-  const { data, error, isLoading } = useSWR<{ trips: Trip[] }>(
-    origin && destination && date ? `${API_ENDPOINTS.trips}?${queryString}` : null,
+  // Use custom hook for searching
+  const { trips, isLoading, isError } = useTripSearch(
+    origin || undefined,
+    destination || undefined,
+    date || undefined
   )
 
-  if (!origin || !destination || !date) {
+  if (!origin && !destination && !date) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center rounded-2xl bg-white p-8 text-center">
-        <div>
-          <Bus className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-          <h3 className="mb-2 text-xl font-semibold text-secondary">Start Your Search</h3>
-          <p className="text-secondary-light">Enter your travel details to find available trips</p>
+      <div className="flex min-h-[400px] items-center justify-center rounded-2xl bg-white p-8 text-center border border-slate-100 shadow-sm">
+        <div className="max-w-md">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
+            <Bus className="h-8 w-8" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold text-slate-900">Start Your Search</h3>
+          <p className="text-slate-500">Enter your origin, destination, and travel date above to find available trips.</p>
         </div>
       </div>
     )
@@ -41,13 +35,13 @@ export function TripList() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse rounded-2xl bg-white p-6">
-            <div className="mb-4 h-6 w-1/3 rounded bg-muted" />
-            <div className="space-y-2">
-              <div className="h-4 w-full rounded bg-muted" />
-              <div className="h-4 w-2/3 rounded bg-muted" />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="animate-pulse rounded-2xl bg-white p-6 border border-slate-100 h-64">
+            <div className="h-48 bg-slate-100 rounded-xl mb-4" />
+            <div className="space-y-3">
+              <div className="h-6 bg-slate-100 rounded w-2/3" />
+              <div className="h-4 bg-slate-100 rounded w-1/2" />
             </div>
           </div>
         ))}
@@ -55,38 +49,46 @@ export function TripList() {
     )
   }
 
-  if (error) {
+  if (isError) {
     return (
-      <Alert variant="destructive">
+      <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>Failed to load trips. Please try again later.</AlertDescription>
+        <AlertDescription>
+          Unable to load trips at this time. Please try again later or contact support.
+        </AlertDescription>
       </Alert>
     )
   }
 
-  if (!data?.trips || data.trips.length === 0) {
+  if (!trips || trips.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-8 text-center">
-        <Bus className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-        <h3 className="mb-2 text-xl font-semibold text-secondary">No Trips Found</h3>
-        <p className="text-secondary-light">
-          No trips available for {origin} to {destination} on {date}. Try different dates or routes.
+      <div className="rounded-2xl bg-white p-12 text-center border border-slate-100 shadow-sm">
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+          <Bus className="h-8 w-8" />
+        </div>
+        <h3 className="mb-2 text-xl font-bold text-slate-900">No Trips Found</h3>
+        <p className="text-slate-500 max-w-sm mx-auto">
+          We couldn't find any trips for {origin} to {destination} on {date}. <br />
+          Try changing your dates or search criteria.
         </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-secondary-light">
-          {data.trips.length} trip{data.trips.length !== 1 ? "s" : ""} found
+    <div className="space-y-6">
+      <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <p className="text-sm font-medium text-slate-600">
+          Found <span className="text-primary font-bold">{trips.length}</span> trip{trips.length !== 1 ? "s" : ""}
         </p>
       </div>
 
-      {data.trips.map((trip) => (
-        <TripCard key={trip.id} trip={trip} passengers={Number.parseInt(passengers)} />
-      ))}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        {trips.map((trip) => (
+          // Use the shared TripCard component
+          <TripCard key={trip.id} trip={trip} />
+        ))}
+      </div>
     </div>
   )
 }

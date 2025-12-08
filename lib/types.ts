@@ -5,6 +5,7 @@ export interface Route {
   id: string | number
   name: string
   code: string
+  origin: string
   destination: string
   base_fare: number
   active: boolean
@@ -349,27 +350,27 @@ export interface CreateBookingPayload {
   booking_type: BookingType
   payment_status: PaymentStatus
   payment_method: 'cash' | 'mobile_money' | 'card' | 'bank_transfer'
-  
+
   // Seat booking (required for passenger bookings)
   seat_id?: number
-  
+
   // Discount & Promo
   discount_id?: number
   promo_code?: string
-  
+
   // Passenger details (required for passenger bookings)
   // passenger_id?: number
   passenger_name?: string
   passenger_phone?: string
   passenger_email?: string
   passenger_type?: PassengerType
-  
+
   // Luggage details (optional for passenger, required for luggage bookings)
   luggage_type_id?: number
   luggage_count?: number
   luggage_weight?: number
   luggage_description?: string
-  
+
   // Parcel details (required for parcel bookings)
   parcel_type_id?: number
   parcel_count?: number
@@ -383,7 +384,7 @@ export interface CreateBookingPayload {
   receiver_email?: string
   pickup_location?: string
   dropoff_location?: string
-  
+
   // Group booking
   is_group_booking?: boolean
   group_passengers?: GroupPassenger[]

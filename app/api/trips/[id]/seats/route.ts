@@ -13,7 +13,7 @@ export async function GET(
   try {
     const { id } = await params;
     const response = await axios.get(
-      `${LARAVEL_API_URL}/trips/${id}/available-seats`,
+      `${LARAVEL_API_URL}/trips/${id}/seats`,
       {
         headers: {
           'Accept': 'application/json',
@@ -22,16 +22,22 @@ export async function GET(
       }
     );
 
+    console.log("response in /api/trips/[id]/seats/route.ts", response.data)
+
     return NextResponse.json(response.data, { status: 200 });
   } catch (error) {
     if (axios.isAxiosError(error)) {
+      const axiosError = error as import('axios').AxiosError<{
+        message?: string;
+        errors?: Record<string, string[]>;
+      }>;
       return NextResponse.json(
         {
           success: false,
-          message: error.response?.data?.message || 'Failed to fetch seats',
-          errors: error.response?.data?.errors
+          message: axiosError.response?.data?.message || 'Failed to fetch seats',
+          errors: axiosError.response?.data?.errors
         },
-        { status: error.response?.status || 500 }
+        { status: axiosError.response?.status || 500 }
       );
     }
 

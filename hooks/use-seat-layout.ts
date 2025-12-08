@@ -37,6 +37,7 @@ export function useBusSeatMap(busId?: number) {
         busId ? API_ENDPOINTS.busSeatMap(busId) : null,
         (url: string) => api.get<{ success: boolean; data: any }>(url)
     )
+    console.log("data in use-seat-layout", data)
 
     return {
         seatMap: data?.data,

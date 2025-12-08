@@ -1,28 +1,15 @@
-"use client"
-
 import { use } from "react"
 
-import BookingFlow from "@/components/booking/booking-flow"
+import TripDetails from "@/components/trips/trip-details"
 
 export default function TripPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
 
   return (
-    <div className="flex min-h-screen flex-col">
-
-      <main className="flex-1 bg-muted/30 py-8">
-        <div className="container mx-auto px-4">
-          <div className="mb-6">
-            <h1 className="mb-2 text-3xl font-bold text-secondary">Select Your Seats</h1>
-            <p className="text-secondary-light">Choose your preferred seats and complete your booking</p>
-          </div>
-
-          <div className="w-full">
-            <BookingFlow tripId={id} />
-          </div>
-        </div>
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <main className="flex-1">
+        <TripDetails tripId={id} />
       </main>
-
     </div>
   )
 }

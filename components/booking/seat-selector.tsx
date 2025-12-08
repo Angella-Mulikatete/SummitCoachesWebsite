@@ -5,24 +5,29 @@ import { motion } from 'framer-motion'
 import { Check, X } from 'lucide-react'
 
 import { Seat } from '@/lib/types'
+import { useTripSeats } from '@/lib/hooks'
 
 interface SeatSelectorProps {
-    seats: Seat[]
+    tripId: string | number
     selectedSeats: number[]
     onSeatSelect: (seatId: number) => void
     maxSeats?: number
-    isLoading?: boolean
+    totalCapacity?: number | string
 }
 
 export default function SeatSelector({
-    seats,
+    tripId,
     selectedSeats,
     onSeatSelect,
     maxSeats = 4,
-    isLoading = false
+    totalCapacity
 }: SeatSelectorProps) {
+    console.log("tripId in seat selector", tripId)
+    // Fetch seats for this trip
+    const { seats, isLoading, isError } = useTripSeats(tripId)
+    console.log("seats in seat selector", seats)
     // Group seats by row
-    const seatsByRow = seats.reduce((acc, seat) => {
+    const seatsByRow = (seats || []).reduce((acc: Record<string, Seat[]>, seat: Seat) => {
         // Use row number as label or convert to letter if needed
         const rowLabel = seat.row_label && seat.row_label.includes('Row') ? seat.row_label : `Row ${seat.row_label}`
         if (!acc[rowLabel]) {
@@ -86,7 +91,15 @@ export default function SeatSelector({
         )
     }
 
-    if (seats.length === 0) {
+    if (isError) {
+        return (
+            <div className="text-center py-12 text-red-500">
+                <p>Failed to load seats. Please try again.</p>
+            </div>
+        )
+    }
+
+    if (!seats || seats.length === 0) {
         return (
             <div className="text-center py-12 text-gray-500">
                 <p>No seats available for this trip</p>
@@ -117,7 +130,12 @@ export default function SeatSelector({
             </div>
 
             {/* Selection Info */}
-            <div className="text-center">
+            <div className="text-center space-y-2">
+                {totalCapacity && (
+                    <p className="text-sm font-medium text-slate-700">
+                        Total Capacity: <span className="text-secondary">{totalCapacity} seats</span>
+                    </p>
+                )}
                 <p className="text-sm text-slate-600">
                     Selected: <span className="font-semibold text-primary">{selectedSeats.length}</span> / {maxSeats} seats
                 </p>
@@ -135,7 +153,7 @@ export default function SeatSelector({
                 {/* Seats by row */}
                 <div className="space-y-3">
                     {sortedRows.map((rowLabel) => {
-                        const rowSeats = seatsByRow[rowLabel].sort((a, b) =>
+                        const rowSeats = seatsByRow[rowLabel].sort((a: Seat, b: Seat) =>
                             (a.position_x || 0) - (b.position_x || 0)
                         )
 
@@ -148,7 +166,7 @@ export default function SeatSelector({
 
                                 {/* Seats */}
                                 <div className="flex gap-2 flex-1 justify-center">
-                                    {rowSeats.map((seat, index) => {
+                                    {rowSeats.map((seat: Seat, index: number) => {
                                         const status = getSeatStatus(seat)
                                         const isClickable = status === 'available' || status === 'selected'
 

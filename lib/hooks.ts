@@ -391,15 +391,15 @@ export function useCreateBooking() {
   const createBooking = async (bookingData: CreateBookingPayload): Promise<BookingResponse> => {
     setIsLoading(true)
     setError(null)
-    
+
     try {
       // Get auth token if available
       const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
-      
+
       const headers: any = {
         'Content-Type': 'application/json',
       }
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
       }
@@ -415,18 +415,18 @@ export function useCreateBooking() {
       console.log('✅ Booking response:', response.data)
 
       return response.data
-    } catch (err) {
-      console.error('❌ Booking error:', err)
-      
+    } catch (err: any) {
+      console.error('Booking error:', err)
+
       if (axios.isAxiosError(err)) {
         // ✅ LOG VALIDATION ERRORS
-        console.error('❌ Validation errors:', err.response?.data?.errors)
-        console.error('❌ Error message:', err.response?.data?.message)
-        console.error('❌ Full response:', err.response?.data)
-        
+        console.error('Validation errors:', err.response?.data?.errors)
+        console.error('Error message:', err.response?.data?.message)
+        console.error('Full response:', err.response?.data)
+
         const errorMessage = err.response?.data?.message || 'Failed to create booking'
         const validationErrors = err.response?.data?.errors
-        
+
         // Combine error message with validation details
         let fullErrorMessage = errorMessage
         if (validationErrors && typeof validationErrors === 'object') {
@@ -435,11 +435,11 @@ export function useCreateBooking() {
             .join('\n')
           fullErrorMessage = `${errorMessage}\n\n${errorDetails}`
         }
-        
+
         setError(fullErrorMessage)
         throw new Error(fullErrorMessage)
       }
-      
+
       setError('An unexpected error occurred')
       throw err
     } finally {
@@ -490,7 +490,7 @@ export function useConfirmBooking() {
         `${API_BASE}/bookings/${bookingId}/confirm`
       )
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       if (axios.isAxiosError(error)) {
         throw new Error(
           error.response?.data?.message || 'Failed to confirm booking'
@@ -517,7 +517,7 @@ export function useCancelBooking() {
         { reason }
       )
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       if (axios.isAxiosError(error)) {
         throw new Error(
           error.response?.data?.message || 'Failed to cancel booking'
@@ -546,7 +546,7 @@ export function useInitializePayment() {
         paymentData
       )
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       if (axios.isAxiosError(error)) {
         throw new Error(
           error.response?.data?.message || 'Failed to initialize payment'
@@ -612,15 +612,32 @@ export function useUserProfile() {
  */
 export function useTripSeats(tripId: string | number | null) {
   const { data, error, isLoading, mutate } = useSWR<any>(
-    tripId ? `${API_BASE}/seats/trip/${tripId}` : null,
+    tripId ? `${API_BASE}/trips/${tripId}/seats` : null,
     fetcher,
     {
       revalidateOnFocus: true,
     }
   )
 
+  console.log('🪑 useTripSeats - Full API response for trip', tripId, ':', data)
+  console.log('🪑 useTripSeats - data?.data:', data?.data)
+  console.log('🪑 useTripSeats - data?.data?.layout:', data?.data?.layout)
+  console.log('🪑 useTripSeats - data?.data?.layout?.seats:', data?.data?.layout?.seats)
+
+  // Extract seats from nested structure: data.data.layout.seats
+  let seats: any[] = []
+  if (data?.data?.layout?.seats) {
+    seats = data.data.layout.seats.map((seat: any) => ({
+      ...seat,
+      status: seat.is_available ? 'available' : 'reserved'
+    }))
+  }
+
+  console.log('🪑 useTripSeats - Extracted seats array:', seats)
+  console.log('🪑 useTripSeats - Seats count:', seats.length)
+
   return {
-    seats: data?.data || [],
+    seats,
     isLoading,
     isError: error,
     mutate,
@@ -669,28 +686,28 @@ export function useRouteFares(routeId: string | number) {
 
   // ✅ Ensure fares is ALWAYS an array
   let fares: any[] = []
-  
+
   if (data) {
     console.log('🎫 Raw fares API response:', data); // DEBUG
-    
+
     // Handle Laravel API response: { success: true, data: { fares: [...], route: {...} } }
     if (data.success && data.data) {
       const innerData = data.data
-      
+
       // ✅ FIX: Check for nested fares array first (your actual structure)
       if (innerData.fares && Array.isArray(innerData.fares)) {
         fares = innerData.fares
-      } 
+      }
       // Fallback: Direct array
       else if (Array.isArray(innerData)) {
         fares = innerData
-      } 
+      }
       // Fallback: Single fare object
       else if (typeof innerData === 'object' && !innerData.route) {
         // Only wrap if it's not the route object
         fares = [innerData]
       }
-    } 
+    }
     // Direct array response
     else if (Array.isArray(data)) {
       fares = data
@@ -729,7 +746,7 @@ export function useValidatePromoCode() {
         ...context,
       })
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       if (axios.isAxiosError(error)) {
         throw new Error(
           error.response?.data?.message || 'Failed to validate promo code'

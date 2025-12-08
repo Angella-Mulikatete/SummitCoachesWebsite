@@ -143,10 +143,10 @@ const BACKEND_API_URL = "/proxy"
 
 export const API_ENDPOINTS = {
   // ==================== AUTH (Use Next.js API Routes) ====================
-  register: "/auth/register",  // ✅ Changed from BACKEND to API route
-  login: "/auth/login",        // ✅ Changed from BACKEND to API route
-  logout: "/auth/logout",      // ✅ Changed from BACKEND to API route
-  profile: "/auth/profile",    // ✅ Changed from BACKEND to API route
+  register: "/auth/register",  
+  login: "/auth/login",        
+  logout: "/auth/logout",      
+  profile: "/auth/profile",    
 
   // ==================== TRIPS AND ROUTES ====================
   routes: "/routes",

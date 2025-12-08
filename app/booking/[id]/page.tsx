@@ -28,24 +28,22 @@
 //           </div>
 //         </div>
 //       </main>
-      
+
 //     </div>
 //   )
 // }
 
 
-'use client'
 
-import { use } from 'react'
 import BookingFlow from '@/components/booking/booking-flow'
 
 interface BookTripPageProps {
     params: Promise<{ id: string }>
 }
 
-export default function BookTripPage({ params }: BookTripPageProps) {
-    const { id } = use(params)
-    
+export default async function BookTripPage({ params }: BookTripPageProps) {
+    const { id } = await params
+
     return (
         <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto mb-8 text-center">

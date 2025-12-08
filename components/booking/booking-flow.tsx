@@ -106,11 +106,11 @@ export default function BookingFlow({ tripId }: BookingFlowProps) {
         console.log('🎉 Auth success, user:', authenticatedUser)
         setUser(authenticatedUser)
         setError("")
-        
+
         // Automatically proceed to next step
         const currentIndex = activeFlow.indexOf(currentStep)
         const nextStep = activeFlow[currentIndex + 1]
-        
+
         if (nextStep) {
             console.log('➡️ Moving to next step:', nextStep)
             setCurrentStep(nextStep)
@@ -121,10 +121,10 @@ export default function BookingFlow({ tripId }: BookingFlowProps) {
     const handleGuestContinue = () => {
         console.log('👤 Continuing as guest')
         setError("")
-        
+
         const currentIndex = activeFlow.indexOf(currentStep)
         const nextStep = activeFlow[currentIndex + 1]
-        
+
         if (nextStep) {
             console.log('➡️ Moving to next step:', nextStep)
             setCurrentStep(nextStep)
@@ -257,15 +257,15 @@ export default function BookingFlow({ tripId }: BookingFlowProps) {
             // LUGGAGE (for passenger or mixed bookings)
             if ((bookingType === 'mixed' || bookingType === 'luggage') && luggageItems.length > 0) {
                 const firstLuggage = luggageItems[0]
-                
+
                 if (firstLuggage.type_id) payload.luggage_type_id = firstLuggage.type_id
-                
+
                 const totalCount = luggageItems.reduce((sum, item) => sum + (item.quantity || 0), 0)
                 if (totalCount > 0) payload.luggage_count = totalCount
-                
+
                 const totalWeight = luggageItems.reduce((sum, item) => sum + (item.weight || 0), 0)
                 if (totalWeight > 0) payload.luggage_weight = totalWeight
-                
+
                 const descriptions = luggageItems.map(item => item.description).filter(Boolean).join(', ')
                 if (descriptions) payload.luggage_description = descriptions
             }
@@ -273,15 +273,15 @@ export default function BookingFlow({ tripId }: BookingFlowProps) {
             // PARCEL BOOKING
             if (bookingType === 'parcel' && luggageItems.length > 0) {
                 const firstParcel = luggageItems[0]
-                
+
                 if (firstParcel.type_id) payload.parcel_type_id = firstParcel.type_id
-                
+
                 const totalCount = luggageItems.reduce((sum, item) => sum + (item.quantity || 0), 0)
                 if (totalCount > 0) payload.parcel_count = totalCount
-                
+
                 const totalWeight = luggageItems.reduce((sum, item) => sum + (item.weight || 0), 0)
                 if (totalWeight > 0) payload.parcel_weight = totalWeight
-                
+
                 const descriptions = luggageItems.map(item => item.description).filter(Boolean).join(', ')
                 if (descriptions) payload.parcel_description = descriptions
 
@@ -456,8 +456,8 @@ export default function BookingFlow({ tripId }: BookingFlowProps) {
                                     <AuthForm onSuccess={handleAuthSuccess} />
                                     {/* Guest Button */}
                                     <div className="mt-6 pt-6 border-t text-center">
-                                        <button 
-                                            onClick={handleGuestContinue} 
+                                        <button
+                                            onClick={handleGuestContinue}
                                             className="text-sm text-slate-600 hover:text-primary underline font-medium transition-colors"
                                         >
                                             Continue as Guest →
@@ -469,10 +469,10 @@ export default function BookingFlow({ tripId }: BookingFlowProps) {
                             {currentStep === "seats" && (
                                 <motion.div key="seats" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                                     <SeatSelector
-                                        seats={seats}
+                                        tripId={tripId}
                                         selectedSeats={selectedSeats}
                                         onSeatSelect={handleSeatSelect}
-                                        isLoading={seatsLoading}
+                                        totalCapacity={trip?.bus?.capacity}
                                     />
                                 </motion.div>
                             )}
@@ -645,318 +645,3 @@ export default function BookingFlow({ tripId }: BookingFlowProps) {
 
 
 
-
-
-
-
-
-
-
-
-// "use client"
-
-// import { useState, useEffect } from "react"
-// import { motion, AnimatePresence } from "framer-motion"
-// import { ChevronRight, ChevronLeft, Loader2, Check } from "lucide-react"
-
-// import { useTripSeats, useCreateBooking, useTrip } from "@/lib/hooks"
-// import { Trip, CreateBookingPayload, Booking, BookingType, User } from "@/lib/types"
-// import SeatSelector from "./seat-selector"
-// import PassengerForm, { PassengerFormData } from "./passenger-form"
-// import PaymentForm, { PaymentFormData } from "./payment-form"
-// import BookingConfirmation from "./booking-confirmation"
-// import { BookingTypeSelector } from "./booking-type-selector"
-// import { AuthForm } from "@/components/auth/auth-form"
-// import { LuggageParcelForm } from "./luggage-parcel-form"
-
-// interface BookingFlowProps {
-//     tripId: string | number
-// }
-
-// type Step = "type" | "auth" | "seats" | "luggage" | "passenger" | "payment" | "confirmation"
-
-// export default function BookingFlow({ tripId }: BookingFlowProps) {
-//     const [currentStep, setCurrentStep] = useState<Step>("type")
-//     const [bookingType, setBookingType] = useState<BookingType>("passenger")
-//     const [user, setUser] = useState<User | null>(null)
-
-//     const [selectedSeats, setSelectedSeats] = useState<number[]>([])
-//     const [luggageItems, setLuggageItems] = useState<any[]>([])
-//     const [luggageCost, setLuggageCost] = useState(0)
-
-//     const [passengerData, setPassengerData] = useState<PassengerFormData | null>(null)
-//     const [paymentData, setPaymentData] = useState<PaymentFormData | null>(null)
-//     const [createdBooking, setCreatedBooking] = useState<Booking | null>(null)
-//     const [error, setError] = useState<string>("")
-
-//     // Fetch data
-//     const { trip, isLoading: tripLoading } = useTrip(tripId)
-//     const { seats, isLoading: seatsLoading } = useTripSeats(tripId)
-//     const { createBooking, isLoading: bookingLoading } = useCreateBooking()
-
-//     // Auto-detect logged in user
-//     useEffect(() => {
-//         const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
-//         // In a real app, we'd fetch profile here if token exists
-//         if (token) {
-//             // Mock or fetch user
-//             // setUser({ id: 1, name: "Test User", ... })
-//         }
-//     }, [])
-
-//     // Calculate totals
-//     const seatPrice = trip?.price || 0
-//     const seatTotal = selectedSeats.length * seatPrice
-//     const totalAmount = seatTotal + luggageCost
-
-//     const handleSeatSelect = (seatId: number) => {
-//         setSelectedSeats((prev) => {
-//             if (prev.includes(seatId)) {
-//                 return prev.filter((id) => id !== seatId)
-//             }
-//             if (prev.length >= 4) return prev
-//             return [...prev, seatId]
-//         })
-//     }
-
-//     const handleNext = async () => {
-//         setError("")
-
-//         if (currentStep === "type") {
-//             // Skip auth if just parcel? Or maybe we still need sender details via Auth or guest form
-//             // User requested: "passenger selects trip... then auth... then seat"
-//             if (user) {
-//                 // If logged in, skip auth
-//                 setCurrentStep(bookingType === 'parcel' ? 'luggage' : 'seats')
-//             } else {
-//                 setCurrentStep("auth")
-//             }
-//         } else if (currentStep === "auth") {
-//             // Auth is handled by component callbacks, but we need a "Guest" option or skip if they logged in
-//             if (user) {
-//                 setCurrentStep(bookingType === 'parcel' ? 'luggage' : 'seats')
-//             } else {
-//                 setError("Please login or register to continue")
-//             }
-//         } else if (currentStep === "seats") {
-//             if (selectedSeats.length === 0 && bookingType !== 'parcel') {
-//                 setError("Please select at least one seat")
-//                 return
-//             }
-//             if (bookingType === 'mixed' || bookingType === 'parcel') {
-//                 setCurrentStep("luggage")
-//             } else {
-//                 setCurrentStep("passenger")
-//             }
-//         } else if (currentStep === "luggage") {
-//             if (bookingType === 'parcel' && luggageItems.length === 0) {
-//                 setError("Please add at least one parcel")
-//                 return
-//             }
-//             setCurrentStep(bookingType === 'parcel' ? 'payment' : 'passenger')
-//         } else if (currentStep === "passenger") {
-//             if (!passengerData?.passenger_name || !passengerData?.passenger_phone) {
-//                 setError("Please fill in all required fields")
-//                 return
-//             }
-//             setCurrentStep("payment")
-//         } else if (currentStep === "payment") {
-//             await handleSubmitBooking()
-//         }
-//     }
-
-//     const handleBack = () => {
-//         setError("")
-//         if (currentStep === "auth") setCurrentStep("type")
-//         if (currentStep === "seats") setCurrentStep(user ? "type" : "auth") // simplified
-//         if (currentStep === "luggage") setCurrentStep("seats")
-//         if (currentStep === "passenger") setCurrentStep(bookingType === 'mixed' ? "luggage" : "seats")
-//         if (currentStep === "payment") setCurrentStep(bookingType === 'parcel' ? "luggage" : "passenger")
-//     }
-
-//     const handleSubmitBooking = async () => {
-//         if (!paymentData) return
-//         if (bookingType !== 'parcel' && (selectedSeats.length === 0 || !passengerData)) return
-
-//         try {
-//             // Create payload matching API
-//             const payload: CreateBookingPayload = {
-//                 trip_id: Number(tripId),
-//                 booking_type: bookingType,
-//                 payment_status: paymentData.payment_status,
-//                 payment_method: paymentData.payment_method,
-
-//                 // Seat (multiple seats logic would typically create multiple bookings or use array if supported)
-//                 seat_id: selectedSeats[0],
-
-//                 // Passenger
-//                 passenger_name: passengerData?.passenger_name || user?.name,
-//                 passenger_phone: passengerData?.passenger_phone || user?.phone,
-//                 passenger_email: passengerData?.passenger_email || user?.email,
-//                 passenger_type: passengerData?.passenger_type || 'adult',
-
-//                 promo_code: paymentData.promo_code,
-
-//                 // Luggage/Parcel (Depending on API structure, might need to map items)
-//                 // luggage_count: luggageItems.length,
-//                 // luggage_charge: luggageCost,
-//             }
-
-//             const response = await createBooking(payload)
-//             setCreatedBooking(response.data)
-//             setCurrentStep("confirmation")
-//         } catch (err: any) {
-//             setError(err.message || "Failed to create booking. Please try again.")
-//         }
-//     }
-
-//     if (tripLoading) {
-//         return (
-//             <div className="flex justify-center items-center min-h-[400px]">
-//                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-//             </div>
-//         )
-//     }
-
-//     if (!trip) {
-//         return (
-//             <div className="text-center py-12">
-//                 <h2 className="text-xl font-semibold text-slate-800">Trip not found</h2>
-//                 <p className="text-slate-600 mt-2">The trip you are looking for does not exist or has expired.</p>
-//             </div>
-//         )
-//     }
-
-//     return (
-//         <div className="max-w-4xl mx-auto">
-//             {/* Progress Steps (Simplified) */}
-//             {currentStep !== "confirmation" && (
-//                 <div className="mb-8 overflow-x-auto">
-//                     <div className="flex items-center min-w-max gap-2 px-2">
-//                         {["type", "auth", "seats", "luggage", "passenger", "payment"].map((step, i) => {
-//                             // Skip steps not relevant to current flow
-//                             if (bookingType === 'passenger' && step === 'luggage') return null
-//                             if (bookingType === 'parcel' && (step === 'seats' || step === 'passenger')) return null
-
-//                             const isCompleted = ["type", "auth", "seats", "luggage", "passenger", "payment", "confirmation"].indexOf(currentStep) > ["type", "auth", "seats", "luggage", "passenger", "payment"].indexOf(step)
-//                             const isActive = currentStep === step
-
-//                             return (
-//                                 <div key={step} className={`flex items-center ${isActive ? "text-primary font-bold" : "text-slate-400"}`}>
-//                                     <span className="capitalize">{step}</span>
-//                                     {i < 5 && <ChevronRight className="w-4 h-4 mx-2 text-slate-300" />}
-//                                 </div>
-//                             )
-//                         })}
-//                     </div>
-//                 </div>
-//             )}
-
-//             {/* Main Content */}
-//             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-//                 {/* Header */}
-//                 {currentStep !== "confirmation" && (
-//                     <div className="bg-slate-50 p-4 border-b flex justify-between items-center">
-//                         <div>
-//                             <h2 className="font-semibold text-slate-800">{trip.route?.origin} to {trip.route?.destination}</h2>
-//                             <p className="text-xs text-slate-500">{new Date(trip.departureDate || trip.date).toLocaleDateString()} • {trip.departureTime || trip.departure_time}</p>
-//                         </div>
-//                         <div className="text-right">
-//                             <p className="text-xs text-slate-500">Total</p>
-//                             <p className="font-bold text-primary">UGX {totalAmount.toLocaleString()}</p>
-//                         </div>
-//                     </div>
-//                 )}
-
-//                 <div className="p-6 min-h-[400px]">
-//                     <AnimatePresence mode="wait">
-//                         {currentStep === "type" && (
-//                             <motion.div key="type" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-//                                 <h2 className="text-xl font-semibold mb-4">How are you traveling?</h2>
-//                                 <BookingTypeSelector selectedType={bookingType} onSelect={setBookingType} />
-//                             </motion.div>
-//                         )}
-
-//                         {currentStep === "auth" && (
-//                             <motion.div key="auth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-//                                 <AuthForm onSuccess={(u) => { setUser(u); handleNext(); }} />
-//                             </motion.div>
-//                         )}
-
-//                         {currentStep === "seats" && (
-//                             <motion.div key="seats" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-//                                 <SeatSelector
-//                                     seats={seats}
-//                                     selectedSeats={selectedSeats}
-//                                     onSeatSelect={handleSeatSelect}
-//                                     isLoading={seatsLoading}
-//                                 />
-//                             </motion.div>
-//                         )}
-
-//                         {currentStep === 'luggage' && (
-//                             <motion.div key="luggage" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-//                                 <LuggageParcelForm
-//                                     type={bookingType === 'parcel' ? 'parcel' : 'luggage'}
-//                                     onUpdate={(items, cost) => { setLuggageItems(items); setLuggageCost(cost); }}
-//                                 />
-//                             </motion.div>
-//                         )}
-
-//                         {currentStep === "passenger" && (
-//                             <motion.div key="passenger" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-//                                 <PassengerForm
-//                                     onPassengerData={setPassengerData}
-//                                     initialData={passengerData || (user ? {
-//                                         passenger_name: user.name,
-//                                         passenger_phone: user.phone || '',
-//                                         passenger_email: user.email,
-//                                         passenger_type: 'adult'
-//                                     } : undefined)}
-//                                 />
-//                             </motion.div>
-//                         )}
-
-//                         {currentStep === "payment" && (
-//                             <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-//                                 <PaymentForm totalAmount={totalAmount} onPaymentData={setPaymentData} tripId={Number(tripId)} />
-//                             </motion.div>
-//                         )}
-
-//                         {currentStep === "confirmation" && createdBooking && (
-//                             <motion.div key="confirmation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-//                                 <BookingConfirmation booking={createdBooking} trip={trip} />
-//                             </motion.div>
-//                         )}
-//                     </AnimatePresence>
-
-//                     {error && (
-//                         <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">{error}</div>
-//                     )}
-//                 </div>
-
-//                 {/* Footer */}
-//                 {currentStep !== "confirmation" && currentStep !== "auth" && (
-//                     <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
-//                         <button
-//                             onClick={handleBack}
-//                             disabled={currentStep === 'type'}
-//                             className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg disabled:opacity-50"
-//                         >
-//                             <ChevronLeft className="w-4 h-4" /> Back
-//                         </button>
-//                         <button
-//                             onClick={handleNext}
-//                             disabled={bookingLoading}
-//                             className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
-//                         >
-//                             {bookingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-//                                 <>{currentStep === 'payment' ? 'Confirm Booking' : 'Next Step'} <ChevronRight className="w-4 h-4" /></>
-//                             )}
-//                         </button>
-//                     </div>
-//                 )}
-//             </div>
-//         </div>
-//     )
-// }
